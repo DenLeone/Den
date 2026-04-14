@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b12" />
+  <title>Lara&Den movies</title>
+  <style>
+    :root{
+      --bg:#09090f;--bg2:#0d0f18;--panel:#141622;--panel2:#191c2a;--line:#282d40;--text:#f3f5fa;--muted:#9fa7bf;
+      --red:#e4262f;--red2:#ff5e57;--gold:#f2bf4b;--ok:#31c48d;--warn:#ffb454;--blue:#6aa7ff;--radius:22px;
+      --shadow:0 18px 40px rgba(0,0,0,.35);--max:780px;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    body{padding:0 0 calc(88px + env(safe-area-inset-bottom))}
+    button,input,select,textarea{font:inherit}
+    .app{max-width:var(--max);margin:0 auto;padding:14px 14px 32px}
+    .hero{position:sticky;top:0;z-index:30;padding:10px 0 14px;background:linear-gradient(180deg,rgba(9,9,15,.98),rgba(9,9,15,.85) 72%,rgba(9,9,15,0));backdrop-filter:blur(10px)}
+    .brand{display:flex;gap:12px;align-items:center;padding:12px;border-radius:26px;background:rgba(20,22,34,.88);border:1px solid rgba(255,255,255,.06);box-shadow:var(--shadow)}
+    .logo{width:56px;height:40px;flex:0 0 auto}
+    .brand h1{margin:0;font-size:1.2rem;line-height:1.05}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:.82rem}
+    .row{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-top:12px}
+    .search,.mini{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);padding:12px 14px;border-radius:18px}
+    .search input{width:100%;border:0;outline:0;background:none;color:var(--text);font-size:1rem}
+    .btn,.chip,.tab{border:0;cursor:pointer}
+    .btn{min-height:46px;padding:12px 14px;border-radius:18px;background:var(--panel);color:var(--text);border:1px solid var(--line)}
+    .btn-primary{background:linear-gradient(135deg,var(--red),var(--red2));border:0;font-weight:700}
+    .btn-soft{background:var(--panel2)}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+    .stat{padding:12px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+    .stat strong{display:block;font-size:1.1rem}.stat span{font-size:.78rem;color:var(--muted)}
+    .toolbar,.filters{display:flex;gap:10px;overflow:auto;padding-bottom:4px;scrollbar-width:none}.toolbar::-webkit-scrollbar,.filters::-webkit-scrollbar{display:none}
+    .tab,.chip{white-space:nowrap;padding:11px 14px;border-radius:999px;background:#1c2031;color:var(--muted);border:1px solid transparent}
+    .tab.active,.chip.active{color:var(--text);background:linear-gradient(180deg,#252a3f,#181c2a);border-color:#3b4463}
+    .filters{margin-top:10px}
+    .panelbar{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:14px;padding:12px 14px;border-radius:20px;background:var(--panel);border:1px solid var(--line)}
+    .small{font-size:.82rem;color:var(--muted)}
+    .section{display:grid;gap:14px;margin-top:16px}
+    .group{background:linear-gradient(180deg,rgba(24,27,40,.98),rgba(18,20,30,.98));border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:var(--shadow)}
+    .group-head{padding:14px 14px 12px;display:grid;gap:8px}
+    .head-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .group h2{margin:0;font-size:1rem}.muted{color:var(--muted)}
+    .progress{height:10px;background:#0f1220;border-radius:999px;overflow:hidden;border:1px solid #232844}
+    .progress > div{height:100%;background:linear-gradient(90deg,var(--red),var(--gold));width:0%}
+    .cards{display:grid;gap:10px;padding:0 10px 10px}
+    .card{display:grid;grid-template-columns:82px 1fr;gap:12px;padding:12px;border-radius:20px;background:#10131d;border:1px solid #242941}
+    .poster{width:82px;height:118px;border-radius:14px;object-fit:cover;background:linear-gradient(135deg,#252838,#141725)}
+    .poster.placeholder{display:grid;place-items:center;font-size:1.5rem;color:#fff;border:1px dashed #39405f}
+    .card-title{font-weight:700;line-height:1.15;margin-bottom:8px}
+    .meta,.actions{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{padding:7px 10px;border-radius:999px;background:#20253a;color:var(--muted);font-size:.76rem}
+    .seen{background:rgba(49,196,141,.17);color:#daf7ea}.progressing{background:rgba(255,180,84,.18);color:#fff0d8}.planned{background:rgba(106,167,255,.16);color:#ddebff}
+    .notes{margin-top:8px;color:#d8dcef;font-size:.87rem}
+    .tiny{min-height:auto;padding:9px 11px;border-radius:14px;font-size:.82rem}
+    .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:40;width:62px;height:62px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--red),var(--red2));color:#fff;font-size:1.9rem;box-shadow:0 14px 30px rgba(228,38,47,.35);cursor:pointer}
+    dialog{width:min(100%,var(--max));border:0;padding:0;background:transparent} dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(5px)}
+    .sheet{background:linear-gradient(180deg,#171925,#10111a);border:1px solid #2b3047;border-radius:28px;padding:16px;box-shadow:var(--shadow)}
+    .sheet h3{margin:0 0 12px}.grid{display:grid;gap:10px}.field{display:grid;gap:7px}.field label{font-size:.84rem;color:var(--muted)}
+    .field input,.field select,.field textarea{width:100%;background:#0b0d14;color:var(--text);border:1px solid var(--line);padding:13px 14px;border-radius:16px;outline:0}
+    .check{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:#0d1018;border:1px solid var(--line)}
+    .actions2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .catalog{display:grid;gap:10px}.suggestion{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+    .empty{padding:24px 16px;text-align:center;color:var(--muted)}
+    @media (max-width:540px){.row{grid-template-columns:1fr auto}.settings-only{display:none}.stats{grid-template-columns:repeat(2,1fr)}.card{grid-template-columns:72px 1fr}.poster{width:72px;height:104px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="hero">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" aria-label="Logo Lara&Den movies">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="1"><stop offset="0%" stop-color="#a10d14"/><stop offset="100%" stop-color="#ff4141"/></linearGradient>
+            <linearGradient id="g2" x1="0" x2="1"><stop offset="0%" stop-color="#ff6767"/><stop offset="100%" stop-color="#cf151d"/></linearGradient>
+          </defs>
+          <circle cx="80" cy="49" r="18" fill="#f2bf4b" opacity=".95"/>
+          <path d="M16 70c16-3 25-11 34-25 8-12 22-17 38-17-11 8-16 14-21 25-5 11-18 22-38 26-6 1-10 0-13-9z" fill="url(#g1)"/>
+          <path d="M144 70c-16-3-25-11-34-25-8-12-22-17-38-17 11 8 16 14 21 25 5 11 18 22 38 26 6 1 10 0 13-9z" fill="url(#g2)"/>
+        </svg>
+        <div><h1>Lara&Den movies</h1><p>Locandine, filtri e progresso franchise</p></div>
+      </div>
+      <div class="row">
+        <div class="search"><span>🔎</span><input id="searchInput" type="search" placeholder="Cerca titolo, saga o nota" /></div>
+        <button class="btn btn-primary" id="addBtn">+ Aggiungi</button>
+        <button class="btn settings-only" id="settingsBtn">⚙️</button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="toolbar" id="tabs"></div>
+      <div class="filters" id="filters"></div>
+    </div>
+
+    <div class="panelbar">
+      <div>
+        <div id="storageMode">Storage: locale</div>
+        <div class="small">GitHub Pages pronto, cloud opzionale e TMDB opzionale.</div>
+      </div>
+      <div class="meta">
+        <button class="btn btn-soft tiny" id="catalogBtn">Catalogo</button>
+        <button class="btn btn-soft tiny" id="settingsBtn2">Setup</button>
+      </div>
+    </div>
+
+    <div class="section" id="content"></div>
+  </div>
+
+  <button class="fab" id="fab">+</button>
+
+  <dialog id="itemDialog">
+    <form class="sheet" id="itemForm" method="dialog">
+      <h3>Aggiungi o modifica</h3>
+      <div class="grid">
+        <div class="field"><label for="title">Titolo</label><input id="title" required /></div>
+        <div class="field"><label for="kind">Tipo</label><select id="kind"><option value="Film">Film</option><option value="Serie">Serie</option></select></div>
+        <div class="field"><label for="list">Categoria</label><select id="list"><option value="IlDen">IlDen</option><option value="LaLara">LaLara</option><option value="Classici">Classici</option></select></div>
+        <div class="field"><label for="group">Franchise / gruppo</label><input id="group" placeholder="Marvel MCU, X-Men, Classici..." /></div>
+        <div class="field"><label for="status">Stato</label><select id="status"><option value="seen">Visto</option><option value="progress">In corso</option><option value="planned">Da vedere</option></select></div>
+        <div class="check"><input id="together" type="checkbox" /><label for="together">Visto insieme</label></div>
+        <div class="field"><label for="poster">Locandina URL</label><input id="poster" placeholder="Automatica con TMDB o incolla URL" /></div>
+        <div class="actions2" style="margin-top:0"><button type="button" class="btn" id="tmdbBtn">Cerca locandina</button><button type="button" class="btn" id="clearPosterBtn">Togli locandina</button></div>
+        <div class="field"><label for="notes">Note</label><textarea id="notes" rows="3" placeholder="Es. siamo al terzo"></textarea></div>
+      </div>
+      <div class="actions2"><button type="button" class="btn" id="cancelBtn">Annulla</button><button type="submit" class="btn btn-primary">Salva</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="catalogDialog"><div class="sheet"><h3>Catalogo rapido</h3><div class="small" style="margin-bottom:12px">Aggiunte rapide ai film e serie più famosi.</div><div class="actions2" style="margin-bottom:12px"><button class="btn" id="closeCatalog">Chiudi</button><button class="btn" id="resetSeed">Ripristina seed</button></div><div class="catalog" id="catalogList"></div></div></dialog>
+
+  <dialog id="settingsDialog"><div class="sheet"><h3>Setup</h3><div class="grid"><div class="field"><label for="supaUrl">Supabase URL</label><input id="supaUrl" placeholder="https://xxxx.supabase.co" /></div><div class="field"><label for="supaKey">Supabase anon key</label><textarea id="supaKey" rows="3" placeholder="Incolla qui la anon key"></textarea></div><div class="field"><label for="tmdbToken">TMDB Bearer token</label><textarea id="tmdbToken" rows="3" placeholder="Token opzionale per locandine automatiche"></textarea></div></div><div class="actions2"><button class="btn" id="closeSettings">Chiudi</button><button class="btn btn-primary" id="saveSettings">Salva setup</button></div></div></dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const CONFIG = { supabaseUrl:'', supabaseAnonKey:'', tmdbToken:'' };
+    const SETTINGS_KEY = 'laraden.settings.v2';
+    const LISTS = ['IlDen','LaLara','Classici'];
+    const STATUS_LABEL = { seen:'Visto', progress:'In corso', planned:'Da vedere' };
+    const STATUS_CLASS = { seen:'seen', progress:'progressing', planned:'planned' };
+    const STATUS_FILTERS = ['all','seen','progress','planned'];
+    const TMDB_IMG = 'https://image.tmdb.org/t/p/w342';
+
+    const seedItems = [
+      { title:'X-Men', kind:'Film', list:'IlDen', group:'X-Men', status:'seen', notes:'Visto', together:true, poster:'' },
+      { title:'X2', kind:'Film', list:'IlDen', group:'X-Men', status:'seen', notes:'Visto', together:true, poster:'' },
+      { title:'X-Men - Conflitto finale', kind:'Film', list:'IlDen', group:'X-Men', status:'progress', notes:'Siamo al terzo', together:true, poster:'' },
+      { title:'Iron Man', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'L\'incredibile Hulk', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Iron Man 2', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Thor', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Captain America - Il primo Vendicatore', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'The Avengers', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Iron Man 3', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Thor - The Dark World', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Captain America - The Winter Soldier', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Guardiani della Galassia', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Avengers - Age of Ultron', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Ant-Man', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Captain America - Civil War', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Doctor Strange', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Guardiani della Galassia Vol. 2', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Spider-Man - Homecoming', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Thor - Ragnarok', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Black Panther', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Avengers - Infinity War', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Ant-Man and the Wasp', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Captain Marvel', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
+      { title:'Avengers - Endgame', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'Ultimo Marvel visto finora', together:true, poster:'' },
+      { title:'Interstellar', kind:'Film', list:'Classici', group:'Classici', status:'planned', notes:'', together:false, poster:'' },
+      { title:'Il Padrino', kind:'Film', list:'Classici', group:'Classici', status:'planned', notes:'', together:false, poster:'' },
+      { title:'Breaking Bad', kind:'Serie', list:'LaLara', group:'Serie cult', status:'planned', notes:'', together:false, poster:'' },
+      { title:'Friends', kind:'Serie', list:'LaLara', group:'Serie cult', status:'planned', notes:'', together:false, poster:'' }
+    ].map((x,i)=>({id:crypto.randomUUID ? crypto.randomUUID() : String(i+1), ...x}));
+
+    const catalogItems = [
+      { title:'The Dark Knight', kind:'Film', list:'Classici', group:'Classici', together:false },
+      { title:'Titanic', kind:'Film', list:'Classici', group:'Classici', together:false },
+      { title:'Il Signore degli Anelli - La compagnia dell\'anello', kind:'Film', list:'Classici', group:'Saga famose', together:false },
+      { title:'Harry Potter e la pietra filosofale', kind:'Film', list:'Classici', group:'Saga famose', together:false },
+      { title:'The Office', kind:'Serie', list:'LaLara', group:'Serie cult', together:false },
+      { title:'Game of Thrones', kind:'Serie', list:'LaLara', group:'Serie cult', together:false },
+      { title:'The Sopranos', kind:'Serie', list:'LaLara', group:'Serie cult', together:false },
+      { title:'Loki', kind:'Serie', list:'IlDen', group:'Marvel Serie', together:true },
+      { title:'WandaVision', kind:'Serie', list:'IlDen', group:'Marvel Serie', together:true },
+      { title:'Deadpool', kind:'Film', list:'IlDen', group:'Marvel Fox', together:true },
+      { title:'Logan', kind:'Film', list:'IlDen', group:'X-Men', together:true },
+      { title:'Stranger Things', kind:'Serie', list:'LaLara', group:'Serie cult', together:false }
+    ];
+
+    const $ = id => document.getElementById(id);
+    const loadSettings = () => ({...CONFIG, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'))});
+    const saveSettingsLS = (s) => localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    let settings = loadSettings();
+    let activeList = 'IlDen', searchTerm = '', editingId = null, items = [], remote = null, statusFilter = 'all', togetherOnly = false;
+
+    const localDb = {
+      key:'laraden.movies.v2',
+      load(){ const raw = localStorage.getItem(this.key); if(!raw){ localStorage.setItem(this.key, JSON.stringify(seedItems)); return structuredClone(seedItems); } try { return JSON.parse(raw); } catch { return structuredClone(seedItems); } },
+      save(all){ localStorage.setItem(this.key, JSON.stringify(all)); },
+      async upsert(item){ const all = this.load(); const i = all.findIndex(x=>x.id===item.id); if(i>=0) all[i]=item; else all.unshift(item); this.save(all); },
+      async remove(id){ this.save(this.load().filter(x=>x.id!==id)); },
+      async reset(){ this.save(structuredClone(seedItems)); }
+    };
+
+    async function initRemote(){
+      if(!settings.supabaseUrl || !settings.supabaseAnonKey || !window.supabase) return null;
+      const client = window.supabase.createClient(settings.supabaseUrl, settings.supabaseAnonKey);
+      $('storageMode').textContent = 'Storage: cloud';
+      return {
+        async load(){
+          const { data, error } = await client.from('titles').select('*').order('created_at',{ascending:true});
+          if(error) throw error;
+          return data.map(r => ({ id:r.id, title:r.title, kind:r.kind, list:r.list_name, group:r.group_name || 'Senza gruppo', status:r.status, notes:r.notes || '', together:!!r.together, poster:r.poster || '' }));
+        },
+        async upsert(item){
+          const payload = { id:item.id, title:item.title, kind:item.kind, list_name:item.list, group_name:item.group, status:item.status, notes:item.notes, together:item.together, poster:item.poster };
+          const { error } = await client.from('titles').upsert(payload); if(error) throw error;
+        },
+        async remove(id){ const { error } = await client.from('titles').delete().eq('id', id); if(error) throw error; },
+        async reset(){ const { error:del } = await client.from('titles').delete().neq('id','00000000-0000-0000-0000-000000000000'); if(del) throw del; const payload = seedItems.map(x=>({id:x.id,title:x.title,kind:x.kind,list_name:x.list,group_name:x.group,status:x.status,notes:x.notes,together:x.together,poster:x.poster})); const { error:ins } = await client.from('titles').insert(payload); if(ins) throw ins; }
+      };
+    }
+
+    function adapter(){ return remote || localDb; }
+    async function refresh(){ items = remote ? await remote.load() : localDb.load(); render(); }
+    async function loadItems(){ remote = await initRemote().catch(()=>null); try { await refresh(); } catch { remote = null; $('storageMode').textContent = 'Storage: locale (cloud non disponibile)'; await refresh(); } }
+
+    function filteredItems(){
+      const q = searchTerm.trim().toLowerCase();
+      return items
+        .filter(x => x.list === activeList)
+        .filter(x => statusFilter === 'all' ? true : x.status === statusFilter)
+        .filter(x => togetherOnly ? !!x.together : true)
+        .filter(x => !q ? true : [x.title,x.group,x.notes,x.kind].join(' ').toLowerCase().includes(q));
+    }
+
+    function grouped(arr){
+      const map = {};
+      arr.forEach(item => { const key = item.group || 'Senza gruppo'; (map[key] ||= []).push(item); });
+      return Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0],'it'));
+    }
+
+    function escapeHtml(str=''){ return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+    function statusCycle(s){ return s === 'planned' ? 'progress' : s === 'progress' ? 'seen' : 'planned'; }
+
+    function renderStats(){
+      const seen = items.filter(x=>x.status==='seen').length;
+      const prog = items.filter(x=>x.status==='progress').length;
+      const plan = items.filter(x=>x.status==='planned').length;
+      const tog = items.filter(x=>x.together).length;
+      $('stats').innerHTML = `<div class="stat"><strong>${items.filter(x=>x.list===activeList).length}</strong><span>${activeList}</span></div><div class="stat"><strong>${seen}</strong><span>Visti</span></div><div class="stat"><strong>${prog}</strong><span>In corso</span></div><div class="stat"><strong>${tog}</strong><span>Insieme</span></div>`;
+    }
+
+    function renderTabs(){
+      $('tabs').innerHTML = LISTS.map(list => `<button class="tab ${list===activeList?'active':''}" data-list="${list}">${list}</button>`).join('');
+      document.querySelectorAll('[data-list]').forEach(btn => btn.onclick = ()=>{ activeList = btn.dataset.list; render(); });
+    }
+
+    function renderFilters(){
+      $('filters').innerHTML = STATUS_FILTERS.map(s => `<button class="chip ${statusFilter===s?'active':''}" data-status="${s}">${s==='all'?'Tutti':STATUS_LABEL[s]}</button>`).join('') + `<button class="chip ${togetherOnly?'active':''}" id="togFilter">Solo insieme</button>`;
+      document.querySelectorAll('[data-status]').forEach(btn => btn.onclick = ()=>{ statusFilter = btn.dataset.status; renderContent(); renderFilters(); });
+      $('togFilter').onclick = ()=>{ togetherOnly = !togetherOnly; renderContent(); renderFilters(); };
+    }
+
+    function groupProgress(entries){
+      const total = entries.length || 1;
+      const seen = entries.filter(x=>x.status==='seen').length;
+      return { seen, total, pct: Math.round((seen/total)*100) };
+    }
+
+    function posterNode(item){
+      if(item.poster) return `<img class="poster" src="${escapeHtml(item.poster)}" alt="${escapeHtml(item.title)}" loading="lazy" referrerpolicy="no-referrer" />`;
+      return `<div class="poster placeholder">🎬</div>`;
+    }
+
+    function cardTemplate(item){
+      return `<article class="card">${posterNode(item)}<div><div class="card-title">${escapeHtml(item.title)}</div><div class="meta"><span class="pill">${escapeHtml(item.kind)}</span><span class="pill ${STATUS_CLASS[item.status]}">${STATUS_LABEL[item.status]}</span>${item.together?'<span class="pill">Insieme</span>':''}</div>${item.notes?`<div class="notes">${escapeHtml(item.notes)}</div>`:''}<div class="actions" style="margin-top:10px"><button class="btn tiny" data-toggle="${item.id}">Stato</button><button class="btn tiny" data-edit="${item.id}">Modifica</button><button class="btn tiny" data-del="${item.id}">Elimina</button></div></div></article>`;
+    }
+
+    function renderContent(){
+      const groups = grouped(filteredItems());
+      if(!groups.length){ $('content').innerHTML = '<div class="group"><div class="empty">Nessun titolo. Prova a togliere i filtri o aggiungi dal catalogo.</div></div>'; return; }
+      $('content').innerHTML = groups.map(([name, entries]) => {
+        const gp = groupProgress(entries);
+        return `<section class="group"><div class="group-head"><div class="head-top"><div><h2>${escapeHtml(name)}</h2><div class="muted">${gp.seen}/${gp.total} completati · ${gp.pct}%</div></div><div class="pill">${activeList}</div></div><div class="progress"><div style="width:${gp.pct}%"></div></div></div><div class="cards">${entries.map(cardTemplate).join('')}</div></section>`;
+      }).join('');
+      document.querySelectorAll('[data-edit]').forEach(b => b.onclick = ()=>openEdit(b.dataset.edit));
+      document.querySelectorAll('[data-del]').forEach(b => b.onclick = async ()=>{ await adapter().remove(b.dataset.del); await refresh(); });
+      document.querySelectorAll('[data-toggle]').forEach(b => b.onclick = async ()=>{ const item = items.find(x=>x.id===b.dataset.toggle); if(!item) return; await adapter().upsert({...item, status:statusCycle(item.status)}); await refresh(); });
+    }
+
+    function renderCatalog(){
+      $('catalogList').innerHTML = catalogItems.map((item, i) => `<div class="suggestion"><div><div class="card-title">${escapeHtml(item.title)}</div><div class="muted">${item.kind} · ${item.list} · ${item.group}</div></div><button class="btn tiny" data-pick="${i}">Aggiungi</button></div>`).join('');
+      document.querySelectorAll('[data-pick]').forEach(btn => btn.onclick = async ()=>{ const c = catalogItems[Number(btn.dataset.pick)]; const payload = { id:crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title:c.title, kind:c.kind, list:c.list, group:c.group, status:'planned', notes:'', together:!!c.together, poster:'' }; await adapter().upsert(payload); await refresh(); });
+    }
+
+    function render(){ renderStats(); renderTabs(); renderFilters(); renderContent(); renderCatalog(); }
+
+    function openNew(prefill={}){
+      editingId = prefill.id || null;
+      $('title').value = prefill.title || '';
+      $('kind').value = prefill.kind || 'Film';
+      $('list').value = prefill.list || activeList;
+      $('group').value = prefill.group || '';
+      $('status').value = prefill.status || 'planned';
+      $('notes').value = prefill.notes || '';
+      $('together').checked = !!prefill.together;
+      $('poster').value = prefill.poster || '';
+      $('itemDialog').showModal();
+    }
+
+    function openEdit(id){ const item = items.find(x=>x.id===id); if(item) openNew(item); }
+
+    async function findPosterForTitle(title, kind){
+      settings = loadSettings();
+      if(!settings.tmdbToken) { alert('Inserisci prima il TMDB Bearer token in Setup'); return ''; }
+      const type = kind === 'Serie' ? 'tv' : 'movie';
+      const url = `https://api.themoviedb.org/3/search/${type}?query=${encodeURIComponent(title)}&language=it-IT&page=1`;
+      const res = await fetch(url, { headers:{ Authorization:`Bearer ${settings.tmdbToken}`, accept:'application/json' } });
+      if(!res.ok) throw new Error('TMDB non disponibile');
+      const data = await res.json();
+      const hit = (data.results || []).find(x => x.poster_path) || (data.results || [])[0];
+      return hit && hit.poster_path ? TMDB_IMG + hit.poster_path : '';
+    }
+
+    $('searchInput').addEventListener('input', e => { searchTerm = e.target.value; renderContent(); });
+    $('addBtn').onclick = () => openNew();
+    $('fab').onclick = () => openNew();
+    $('cancelBtn').onclick = () => $('itemDialog').close();
+    $('catalogBtn').onclick = () => $('catalogDialog').showModal();
+    $('closeCatalog').onclick = () => $('catalogDialog').close();
+    $('settingsBtn').onclick = () => $('settingsDialog').showModal();
+    $('settingsBtn2').onclick = () => $('settingsDialog').showModal();
+    $('closeSettings').onclick = () => $('settingsDialog').close();
+
+    $('tmdbBtn').onclick = async () => {
+      const title = $('title').value.trim();
+      if(!title) return alert('Scrivi prima il titolo');
+      const btn = $('tmdbBtn'); const old = btn.textContent; btn.textContent = 'Cerco...'; btn.disabled = true;
+      try { const poster = await findPosterForTitle(title, $('kind').value); if(poster) $('poster').value = poster; else alert('Locandina non trovata'); }
+      catch(e){ alert('Errore TMDB'); }
+      finally { btn.textContent = old; btn.disabled = false; }
+    };
+
+    $('clearPosterBtn').onclick = () => $('poster').value = '';
+
+    $('saveSettings').onclick = async () => {
+      settings = { supabaseUrl:$('supaUrl').value.trim(), supabaseAnonKey:$('supaKey').value.trim(), tmdbToken:$('tmdbToken').value.trim() };
+      saveSettingsLS(settings);
+      $('settingsDialog').close();
+      remote = await initRemote().catch(()=>null);
+      await refresh();
+    };
+
+    $('resetSeed').onclick = async () => { await adapter().reset(); await refresh(); };
+
+    $('itemForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        id: editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        title: $('title').value.trim(),
+        kind: $('kind').value,
+        list: $('list').value,
+        group: $('group').value.trim() || 'Senza gruppo',
+        status: $('status').value,
+        notes: $('notes').value.trim(),
+        together: $('together').checked,
+        poster: $('poster').value.trim()
+      };
+      if(!payload.title) return;
+      await adapter().upsert(payload);
+      $('itemDialog').close();
+      await refresh();
+    });
+
+    function preloadSettings(){
+      settings = loadSettings();
+      $('supaUrl').value = settings.supabaseUrl || '';
+      $('supaKey').value = settings.supabaseAnonKey || '';
+      $('tmdbToken').value = settings.tmdbToken || '';
+    }
+
+    preloadSettings();
+    loadItems();
+  </script>
+</body>
+</html>
