@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#000000" />
+<title>Den Mapper — Projection Mapping</title>
+<style>
+  :root{
+    --bg:#07070b; --panel:#101018; --panel2:#15151f; --line:#262638; --text:#f2f3f8; --muted:#9aa0b8;
+    --accent:#7c5cff; --accent2:#00e5ff; --danger:#ff4d5e; --ok:#2fd97f; --radius:16px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:#000;color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;overflow:hidden}
+  button,input,select,textarea{font:inherit;color:inherit}
+  #stage{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000;touch-action:none}
+  #handles{position:fixed;inset:0;pointer-events:none;z-index:20}
+  .handle{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:rgba(124,92,255,.25);border:2px solid var(--accent2);pointer-events:auto;cursor:grab;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;box-shadow:0 0 0 3px rgba(0,0,0,.5)}
+  .handle.selected{background:rgba(255,77,94,.35);border-color:var(--danger)}
+  .handle:active{cursor:grabbing}
+  .quad-outline{position:absolute;inset:0;pointer-events:none}
+
+  .ui{position:fixed;z-index:30;transition:opacity .35s ease, transform .35s ease}
+  .ui-hidden{opacity:0;pointer-events:none;transform:translateY(6px)}
+
+  #topbar{top:10px;left:10px;right:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .brandmini{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(16,16,24,.85);border:1px solid var(--line);backdrop-filter:blur(8px);font-weight:700;font-size:.82rem;letter-spacing:.02em}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);box-shadow:0 0 8px var(--accent2)}
+  .btn{border:0;cursor:pointer;background:rgba(16,16,24,.85);color:var(--text);border:1px solid var(--line);padding:9px 13px;border-radius:12px;font-size:.82rem;backdrop-filter:blur(8px)}
+  .btn:hover{border-color:#3b3b58}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),#4b2fe0);border:0;font-weight:700}
+  .btn.danger{background:linear-gradient(135deg,#c02233,var(--danger));border:0;font-weight:700}
+  .btn.ok{background:linear-gradient(135deg,#1f9e5f,var(--ok));border:0;font-weight:700;color:#04140c}
+  .btn.icon{padding:9px 11px}
+  .spacer{flex:1}
+
+  #panel{top:56px;right:10px;bottom:10px;width:340px;max-width:92vw;background:rgba(12,12,18,.92);border:1px solid var(--line);border-radius:20px;backdrop-filter:blur(10px);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+  .tabs{display:flex;gap:6px;padding:10px 10px 0}
+  .tabbtn{flex:1;padding:9px 6px;border-radius:10px 10px 0 0;background:var(--panel2);border:1px solid var(--line);border-bottom:0;color:var(--muted);cursor:pointer;font-size:.78rem;font-weight:700}
+  .tabbtn.active{color:var(--text);background:var(--panel)}
+  .tabbody{flex:1;overflow:auto;padding:12px;border-top:1px solid var(--line);background:var(--panel)}
+  .tabbody::-webkit-scrollbar{width:8px}.tabbody::-webkit-scrollbar-thumb{background:#2a2a3c;border-radius:8px}
+
+  .field{display:grid;gap:5px;margin-bottom:10px}
+  .field label{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .field input[type=text],.field select{width:100%;background:#0b0b12;border:1px solid var(--line);padding:9px 10px;border-radius:10px;outline:0}
+  .field input[type=range]{width:100%}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .field input[type=color]{width:100%;height:36px;border:1px solid var(--line);border-radius:10px;background:#0b0b12;padding:2px}
+  .surf-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);margin-bottom:7px;cursor:pointer}
+  .surf-item.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  .surf-item .name{flex:1;font-size:.86rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .surf-item .swatch{width:14px;height:14px;border-radius:4px;flex:0 0 auto}
+  .surf-item button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.9rem;padding:3px 5px}
+  .surf-item button:hover{color:var(--text)}
+  hr{border:0;border-top:1px solid var(--line);margin:12px 0}
+  .hint{font-size:.76rem;color:var(--muted);line-height:1.4}
+  .scene-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);margin-bottom:7px}
+  .scene-item .key{width:22px;height:22px;border-radius:6px;background:#0b0b12;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:.72rem;color:var(--muted);flex:0 0 auto}
+  .scene-item .name{flex:1;font-size:.85rem;font-weight:600}
+  .scene-item button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.85rem;padding:3px 5px}
+  .scene-item button:hover{color:var(--text)}
+
+  dialog{border:0;padding:0;background:transparent;max-width:560px;width:92vw}
+  dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+  .sheet{background:linear-gradient(180deg,#141420,#0d0d15);border:1px solid var(--line);border-radius:22px;padding:20px;max-height:80vh;overflow:auto}
+  .sheet h3{margin:0 0 10px}
+  .sheet p,.sheet li{color:#d6d8ea;font-size:.9rem;line-height:1.55}
+  .sheet code{background:#0b0b12;padding:1px 6px;border-radius:6px;border:1px solid var(--line);font-size:.85em}
+  .closebar{display:flex;justify-content:flex-end;margin-top:14px}
+  kbd{background:#0b0b12;border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.8em}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(16,16,24,.95);border:1px solid var(--line);padding:10px 16px;border-radius:999px;font-size:.82rem;z-index:60;opacity:0;transition:opacity .3s}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<canvas id="stage"></canvas>
+<div id="handles"></div>
+
+<div class="ui" id="topbar">
+  <div class="brandmini"><span class="dot"></span> Den Mapper</div>
+  <button class="btn icon" id="editToggle" title="Modalità calibrazione (E)">✏️ Edit</button>
+  <button class="btn icon" id="fsToggle" title="Schermo intero (F)">⛶ Fullscreen</button>
+  <button class="btn icon danger" id="blackoutBtn" title="Blackout (Spazio)">⏻ Blackout</button>
+  <div class="spacer"></div>
+  <button class="btn icon" id="helpBtn" title="Aiuto">❓</button>
+  <button class="btn icon" id="panelToggle" title="Pannello controlli (Tab)">☰ Pannello</button>
+</div>
+
+<div class="ui" id="panel">
+  <div class="tabs">
+    <button class="tabbtn active" data-tab="surfaces">Superfici</button>
+    <button class="tabbtn" data-tab="scenes">Scene</button>
+    <button class="tabbtn" data-tab="global">Globale</button>
+  </div>
+  <div class="tabbody" id="tabbody"></div>
+</div>
+
+<dialog id="helpDialog">
+  <div class="sheet">
+    <h3>Come funziona Den Mapper</h3>
+    <p><b>Idea base:</b> ogni computer collegato a un proiettore (via HDMI) apre questa pagina a schermo intero. Definisci una o più "superfici" (quadrilateri) e le deformi in prospettiva finché combaciano con muri, colonne, oggetti reali. Su ogni superficie metti un effetto di luce (colore, plasma, fuoco, video...). Per fare uno show con tanti proiettori, apri la stessa pagina su ogni computer: ognuno calibra la propria geometria, poi lanci le stesse "scene" ovunque.</p>
+    <p><b>1. Calibrazione</b><br>Premi <kbd>E</kbd> per entrare in modalità Edit. Trascina i 4 pallini agli angoli di ogni superficie finché la proiezione combacia con l'ambiente reale. Usa le frecce ⬅➡⬆⬇ per spostare di 1px l'angolo selezionato (clicca un pallino per selezionarlo), <kbd>Shift</kbd>+freccia per 10px.</p>
+    <p><b>2. Effetti</b><br>Nel pannello "Superfici" scegli l'effetto, i colori, la velocità e la luminosità di ogni superficie. L'effetto "Griglia" è pensato apposta per calibrare: mostra linee e numeri d'angolo.</p>
+    <p><b>3. Scene</b><br>Una "Scena" salva lo stato (effetto/colori/velocità) di tutte le superfici. Salvala, poi richiamala dal vivo — anche con i tasti <kbd>1</kbd>–<kbd>9</kbd>. Il cambio scena è graduale (dissolvenza), non a scatti.</p>
+    <p><b>4. Show sincronizzato senza rete</b><br>Gli effetti sono calcolati in base all'orologio di sistema, non a un contatore locale casuale. Se tutti i computer hanno l'ora sincronizzata (es. automaticamente via internet) e lanci la stessa scena sullo stesso secondo su ogni macchina, i mille proiettori "respirano" in sync anche senza una rete di controllo dedicata.</p>
+    <p><b>5. Uscita pulita</b><br>Premi <kbd>F</kbd> per lo schermo intero e <kbd>Tab</kbd> per nascondere il pannello: l'output diventa puro buio + luce, pronto per il proiettore. <kbd>Spazio</kbd> = blackout istantaneo (utile mentre cambi qualcosa dal vivo).</p>
+    <p><b>Nota:</b> layout (geometria) e parametri si salvano da soli in questo browser. Video/immagini caricati vanno ricaricati dopo un refresh. Usa "Esporta scene" per copiare il "look" (non la geometria) su altri computer/proiettori.</p>
+    <div class="closebar"><button class="btn primary" id="closeHelp">Ho capito</button></div>
+  </div>
+</dialog>
+
+<dialog id="importDialog">
+  <div class="sheet">
+    <h3>Importa scene</h3>
+    <div class="field"><label>Incolla qui il JSON esportato</label><textarea id="importText" rows="8" style="width:100%;background:#0b0b12;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px"></textarea></div>
+    <div class="closebar" style="gap:8px"><button class="btn" id="cancelImport">Annulla</button><button class="btn primary" id="confirmImport">Importa</button></div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------------------- */
+/* UTILS                                                                   */
+/* ---------------------------------------------------------------------- */
+const $ = s => document.querySelector(s);
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+function hexToRgb(hex){
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex||'#7c5cff');
+  return m ? [parseInt(m[1],16),parseInt(m[2],16),parseInt(m[3],16)] : [124,92,255];
+}
+function rgbStr(rgb,a){ return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a==null?1:a})`; }
+function lerpColor(c1,c2,t){
+  t=clamp(t,0,1);
+  return [c1[0]+(c2[0]-c1[0])*t, c1[1]+(c2[1]-c1[1])*t, c1[2]+(c2[2]-c1[2])*t];
+}
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._h); toast._h = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function nowSec(){ return Date.now()/1000; }
+
+/* ---------------------------------------------------------------------- */
+/* FIRE PALETTE (procedural, 37 steps, black -> red -> orange -> white)    */
+/* ---------------------------------------------------------------------- */
+const FIRE_PALETTE = (function(){
+  const stops = [
+    [0,[0,0,0]], [0.15,[90,0,0]], [0.35,[200,20,0]], [0.55,[255,110,0]],
+    [0.75,[255,200,40]], [0.9,[255,255,180]], [1,[255,255,255]]
+  ];
+  const pal = [];
+  for(let i=0;i<37;i++){
+    const t = i/36;
+    let a=stops[0], b=stops[stops.length-1];
+    for(let k=0;k<stops.length-1;k++){ if(t>=stops[k][0] && t<=stops[k+1][0]){ a=stops[k]; b=stops[k+1]; break; } }
+    const span = (b[0]-a[0])||1; const lt = (t-a[0])/span;
+    pal.push(lerpColor(a[1],b[1],lt));
+  }
+  return pal;
+})();
+
+/* ---------------------------------------------------------------------- */
+/* EFFECTS LIBRARY — each draws into a small 2D offscreen canvas           */
+/* ---------------------------------------------------------------------- */
+const EFFECTS = {
+  grid: { label:'Griglia di calibrazione', draw:drawGrid },
+  off: { label:'Nero (spento)', draw:(ctx,p)=>{ ctx.fillStyle='#000'; ctx.fillRect(0,0,p.w,p.h); } },
+  solid: { label:'Colore pieno', draw:drawSolid },
+  pulse: { label:'Pulsazione', draw:drawPulse },
+  strobe: { label:'Strobo', draw:drawStrobe },
+  gradientSweep: { label:'Sweep colore', draw:drawGradientSweep },
+  stripes: { label:'Strisce in movimento', draw:drawStripes },
+  scanner: { label:'Scanner (barra)', draw:drawScanner },
+  radial: { label:'Spot radiale', draw:drawRadial },
+  noise: { label:'Rumore organico', draw:drawNoise },
+  plasma: { label:'Plasma', draw:drawPlasma },
+  fire: { label:'Fuoco', draw:drawFire },
+  image: { label:'Immagine', draw:drawImageEffect },
+  video: { label:'Video', draw:drawVideoEffect },
+};
+
+function drawSolid(ctx,p){
+  const c = hexToRgb(p.color1);
+  ctx.fillStyle = rgbStr(c, clamp(p.brightness,0,1));
+  ctx.fillRect(0,0,p.w,p.h);
+}
+function drawPulse(ctx,p){
+  ctx.fillStyle = '#000'; ctx.fillRect(0,0,p.w,p.h);
+  const level = (0.5 + 0.5*Math.sin(p.t*p.speed*2)) * clamp(p.brightness,0,1);
+  const c = hexToRgb(p.color1);
+  ctx.fillStyle = rgbStr(c, level);
+  ctx.fillRect(0,0,p.w,p.h);
+}
+function drawStrobe(ctx,p){
+  const on = Math.floor(p.t*p.speed*8) % 2 === 0;
+  const c = hexToRgb(on ? p.color1 : (p.color2||'#000000'));
+  ctx.fillStyle = rgbStr(c, on ? clamp(p.brightness,0,1) : (p.color2 ? clamp(p.brightness,0,1)*0.15 : 0));
+  ctx.fillRect(0,0,p.w,p.h);
+}
+function drawGradientSweep(ctx,p){
+  const angle = p.t*p.speed*0.6;
+  const cx=p.w/2, cy=p.h/2, r=Math.hypot(p.w,p.h)/2;
+  const x0=cx-Math.cos(angle)*r, y0=cy-Math.sin(angle)*r;
+  const x1=cx+Math.cos(angle)*r, y1=cy+Math.sin(angle)*r;
+  const g = ctx.createLinearGradient(x0,y0,x1,y1);
+  const c1=hexToRgb(p.color1), c2=hexToRgb(p.color2||'#00e5ff');
+  g.addColorStop(0, rgbStr(c1,clamp(p.brightness,0,1)));
+  g.addColorStop(1, rgbStr(c2,clamp(p.brightness,0,1)));
+  ctx.fillStyle = g; ctx.fillRect(0,0,p.w,p.h);
+}
+function drawStripes(ctx,p){
+  const c1=hexToRgb(p.color1), c2=hexToRgb(p.color2||'#000000');
+  ctx.fillStyle = rgbStr(c2, clamp(p.brightness,0,1)*0.5); ctx.fillRect(0,0,p.w,p.h);
+  ctx.save();
+  ctx.translate(p.w/2,p.h/2); ctx.rotate(0.5); ctx.translate(-p.w/2,-p.h/2);
+  const density = Math.max(2,p.density||8);
+  const sw = Math.max(6, (p.w+p.h)/density);
+  const off = (p.t*p.speed*40) % (sw*2);
+  ctx.fillStyle = rgbStr(c1, clamp(p.brightness,0,1));
+  const diag = p.w+p.h;
+  for(let x=-diag; x<diag*2; x+=sw*2){
+    ctx.fillRect(x+off-diag, -diag, sw, diag*4);
+  }
+  ctx.restore();
+}
+function drawScanner(ctx,p){
+  ctx.fillStyle = rgbStr(hexToRgb(p.color2||'#000000'), clamp(p.brightness,0,1)*0.12);
+  ctx.fillRect(0,0,p.w,p.h);
+  const x = (0.5+0.5*Math.sin(p.t*p.speed)) * p.w;
+  const bw = p.w * clamp((p.density||8)/40, 0.03, 0.4);
+  const g = ctx.createLinearGradient(x-bw,0,x+bw,0);
+  const c1 = hexToRgb(p.color1);
+  g.addColorStop(0, rgbStr(c1,0));
+  g.addColorStop(0.5, rgbStr(c1,clamp(p.brightness,0,1)));
+  g.addColorStop(1, rgbStr(c1,0));
+  ctx.fillStyle = g;
+  ctx.fillRect(x-bw,0,bw*2,p.h);
+}
+function drawRadial(ctx,p){
+  ctx.fillStyle = '#000'; ctx.fillRect(0,0,p.w,p.h);
+  const cx = p.w/2 + Math.cos(p.t*p.speed)*p.w*0.28;
+  const cy = p.h/2 + Math.sin(p.t*p.speed*0.8)*p.h*0.28;
+  const r = Math.max(p.w,p.h) * clamp((p.density||8)/16, 0.15, 0.9);
+  const c1 = hexToRgb(p.color1);
+  const g = ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+  g.addColorStop(0, rgbStr(c1,clamp(p.brightness,0,1)));
+  g.addColorStop(1, rgbStr(c1,0));
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,p.w,p.h);
+}
+function ensureImgData(surface,w,h){
+  if(!surface._imgData || surface._imgData.width!==w || surface._imgData.height!==h){
+    surface._imgData = surface._ctx.createImageData(w,h);
+  }
+  return surface._imgData;
+}
+function drawNoise(ctx,p){
+  const w=p.w,h=p.h, id = ensureImgData(p.surface,w,h), data = id.data;
+  const c1=hexToRgb(p.color1), c2=hexToRgb(p.color2||'#00e5ff');
+  const freq = (p.density||8)/60, t=p.t*p.speed;
+  let idx=0;
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const v = Math.sin(x*freq+t) + Math.sin(y*freq*1.3-t*1.1) + Math.sin((x+y)*freq*0.7+t*0.6) + Math.sin((x-y)*freq*0.5-t*0.4);
+      const n = clamp((v/4+1)/2,0,1);
+      const col = lerpColor(c1,c2,n);
+      const b = clamp(p.brightness,0,1);
+      data[idx++]=col[0]; data[idx++]=col[1]; data[idx++]=col[2]; data[idx++]=255*b;
+    }
+  }
+  ctx.putImageData(id,0,0);
+}
+function drawPlasma(ctx,p){
+  const w=p.w,h=p.h, id = ensureImgData(p.surface,w,h), data = id.data;
+  const c1=hexToRgb(p.color1), c2=hexToRgb(p.color2||'#ff5e57');
+  const freq = (p.density||8)/40, t=p.t*p.speed;
+  let idx=0;
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const v = Math.sin(x*freq+t) + Math.sin(y*freq*0.8-t*1.3) + Math.sin((x+y)*freq*0.6+t*0.7) + Math.sin(Math.sqrt((x-w/2)*(x-w/2)+(y-h/2)*(y-h/2))*freq*0.9-t);
+      const n = clamp((v/4+1)/2,0,1);
+      const col = lerpColor(c1,c2,n);
+      const b = clamp(p.brightness,0,1);
+      data[idx++]=col[0]; data[idx++]=col[1]; data[idx++]=col[2]; data[idx++]=255*b;
+    }
+  }
+  ctx.putImageData(id,0,0);
+}
+function drawFire(ctx,p){
+  const w=p.w,h=p.h, surf=p.surface;
+  if(!surf._fireBuf || surf._fireBuf.length !== w*h){ surf._fireBuf = new Uint8Array(w*h); }
+  const buf = surf._fireBuf;
+  const density = clamp((p.density||8)/16, 0.1, 1);
+  for(let x=0;x<w;x++){
+    buf[(h-1)*w+x] = Math.random() < density ? 36 : 0;
+  }
+  for(let x=0;x<w;x++){
+    for(let y=1;y<h;y++){
+      const src = y*w+x;
+      const rand = (Math.random()*3.2)|0;
+      const decay = (Math.random()*2)|0;
+      const dstX = ((x + rand - 1) % w + w) % w;
+      const dst = (y-1)*w + dstX;
+      buf[dst] = Math.max(0, buf[src]-decay);
+    }
+  }
+  const id = ensureImgData(surf,w,h), data = id.data;
+  const b = clamp(p.brightness,0,1);
+  for(let i=0;i<w*h;i++){
+    const col = FIRE_PALETTE[buf[i]] || [0,0,0];
+    data[i*4]=col[0]; data[i*4+1]=col[1]; data[i*4+2]=col[2]; data[i*4+3]= (buf[i]>0?255:0)*b;
+  }
+  ctx.putImageData(id,0,0);
+}
+function drawImageEffect(ctx,p){
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,p.w,p.h);
+  const img = p.surface._mediaEl;
+  if(img && img.complete && img.naturalWidth){
+    ctx.globalAlpha = clamp(p.brightness,0,1);
+    const s = Math.max(p.w/img.naturalWidth, p.h/img.naturalHeight);
+    const iw = img.naturalWidth*s, ih = img.naturalHeight*s;
+    ctx.drawImage(img, (p.w-iw)/2, (p.h-ih)/2, iw, ih);
+    ctx.globalAlpha = 1;
+  } else {
+    drawGrid(ctx,p);
+  }
+}
+function drawVideoEffect(ctx,p){
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,p.w,p.h);
+  const v = p.surface._mediaEl;
+  if(v && v.readyState >= 2){
+    ctx.globalAlpha = clamp(p.brightness,0,1);
+    const s = Math.max(p.w/v.videoWidth, p.h/v.videoHeight);
+    const iw = v.videoWidth*s, ih = v.videoHeight*s;
+    ctx.drawImage(v, (p.w-iw)/2, (p.h-ih)/2, iw, ih);
+    ctx.globalAlpha = 1;
+  } else {
+    drawGrid(ctx,p);
+  }
+}
+function drawGrid(ctx,p){
+  const w=p.w,h=p.h;
+  ctx.fillStyle = '#050507'; ctx.fillRect(0,0,w,h);
+  const c1 = hexToRgb(p.color1), c2 = hexToRgb(p.color2||'#00e5ff');
+  const n = Math.max(2, Math.round(p.density||8));
+  ctx.strokeStyle = rgbStr(c1, clamp(p.brightness,0,1)*0.9);
+  ctx.lineWidth = Math.max(1, w/400);
+  ctx.beginPath();
+  for(let i=1;i<n;i++){ const x=w*i/n; ctx.moveTo(x,0); ctx.lineTo(x,h); }
+  for(let i=1;i<n;i++){ const y=h*i/n; ctx.moveTo(0,y); ctx.lineTo(w,y); }
+  ctx.stroke();
+  ctx.lineWidth = Math.max(2, w/120);
+  ctx.strokeRect(ctx.lineWidth/2, ctx.lineWidth/2, w-ctx.lineWidth, h-ctx.lineWidth);
+  ctx.strokeStyle = rgbStr(c2, clamp(p.brightness,0,1));
+  ctx.beginPath();
+  ctx.moveTo(w/2-14,h/2); ctx.lineTo(w/2+14,h/2);
+  ctx.moveTo(w/2,h/2-14); ctx.lineTo(w/2,h/2+14);
+  ctx.stroke();
+  const labels = ['1','2','3','4'];
+  const pos = [[0,0],[w,0],[w,h],[0,h]];
+  ctx.font = `bold ${Math.max(12,w/22)}px sans-serif`;
+  ctx.fillStyle = rgbStr(c2,1);
+  ctx.textBaseline = 'middle';
+  pos.forEach((pt,i)=>{
+    const ox = pt[0]===0? 8 : -22, oy = pt[1]===0? 16 : -14;
+    ctx.fillText(labels[i], pt[0]+ox, pt[1]+oy);
+  });
+}
+
+/* ---------------------------------------------------------------------- */
+/* WEBGL SETUP (must exist before surfaces are created below)              */
+/* ---------------------------------------------------------------------- */
+const canvas = $('#stage');
+const gl = canvas.getContext('webgl', {antialias:true, alpha:false, premultipliedAlpha:false}) ||
+           canvas.getContext('experimental-webgl', {antialias:true, alpha:false});
+if(!gl){ alert('WebGL non disponibile su questo browser/dispositivo.'); }
+
+const VERT_SRC = `
+  attribute vec2 aNdc;
+  attribute float aW;
+  attribute vec2 aUv;
+  varying vec2 vUv;
+  void main(){
+    gl_Position = vec4(aNdc * aW, 0.0, aW);
+    vUv = aUv;
+  }
+`;
+const FRAG_SRC = `
+  precision mediump float;
+  varying vec2 vUv;
+  uniform sampler2D uTex;
+  uniform float uOpacity;
+  uniform float uMasterBrightness;
+  void main(){
+    vec4 c = texture2D(uTex, vUv);
+    gl_FragColor = vec4(c.rgb * uOpacity * uMasterBrightness, c.a * uOpacity);
+  }
+`;
+function compile(type, src){
+  const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh);
+  if(!gl.getShaderParameter(sh, gl.COMPILE_STATUS)){ console.error(gl.getShaderInfoLog(sh)); }
+  return sh;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT_SRC));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG_SRC));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+const locNdc = gl.getAttribLocation(prog,'aNdc');
+const locW = gl.getAttribLocation(prog,'aW');
+const locUv = gl.getAttribLocation(prog,'aUv');
+const locOpacity = gl.getUniformLocation(prog,'uOpacity');
+const locMaster = gl.getUniformLocation(prog,'uMasterBrightness');
+const locTex = gl.getUniformLocation(prog,'uTex');
+gl.uniform1i(locTex, 0);
+
+const idxBuf = gl.createBuffer();
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuf);
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2, 0,2,3]), gl.STATIC_DRAW);
+
+function resizeCanvas(){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  canvas.width = Math.round(window.innerWidth*dpr);
+  canvas.height = Math.round(window.innerHeight*dpr);
+  gl.viewport(0,0,canvas.width,canvas.height);
+  layoutHandles();
+}
+window.addEventListener('resize', resizeCanvas);
+
+/* Heckbert unit-square -> quadrilateral projective mapping */
+function computeCornerWeights(px){
+  // px: [[x0,y0],[x1,y1],[x2,y2],[x3,y3]] in pixels
+  const [ [x0,y0],[x1,y1],[x2,y2],[x3,y3] ] = px;
+  const dx1=x1-x2, dx2=x3-x2, dx3=x0-x1+x2-x3;
+  const dy1=y1-y2, dy2=y3-y2, dy3=y0-y1+y2-y3;
+  let g=0,h=0;
+  const eps=1e-9;
+  if(Math.abs(dx3)>eps || Math.abs(dy3)>eps){
+    const denom = dx1*dy2 - dx2*dy1;
+    if(Math.abs(denom)>eps){
+      g = (dx3*dy2 - dx2*dy3)/denom;
+      h = (dx1*dy3 - dx3*dy1)/denom;
+    }
+  }
+  return [1, g+1, g+h+1, h+1]; // w for corners 0,1,2,3
+}
+
+function drawSurfaceGL(s, opacity){
+  const w = canvas.width, h = canvas.height;
+  const px = s.corners.map(([nx,ny]) => [nx*w, ny*h]);
+  const ws = computeCornerWeights(px);
+  const uv = [[0,0],[1,0],[1,1],[0,1]];
+  const data = new Float32Array(4*5);
+  for(let i=0;i<4;i++){
+    const ndcX = (px[i][0]/w)*2-1;
+    const ndcY = 1-(px[i][1]/h)*2;
+    data[i*5+0]=ndcX; data[i*5+1]=ndcY; data[i*5+2]=ws[i]; data[i*5+3]=uv[i][0]; data[i*5+4]=uv[i][1];
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, s._vbuf);
+  gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+  const stride = 5*4;
+  gl.enableVertexAttribArray(locNdc); gl.vertexAttribPointer(locNdc,2,gl.FLOAT,false,stride,0);
+  gl.enableVertexAttribArray(locW); gl.vertexAttribPointer(locW,1,gl.FLOAT,false,stride,8);
+  gl.enableVertexAttribArray(locUv); gl.vertexAttribPointer(locUv,2,gl.FLOAT,false,stride,12);
+
+  gl.bindTexture(gl.TEXTURE_2D, s._tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, s._ecanvas);
+
+  if(s.blend === 'add') gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+  else if(s.blend === 'screen') gl.blendFunc(gl.ONE_MINUS_DST_COLOR, gl.ONE);
+  else gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+  gl.uniform1f(locOpacity, opacity==null? s.opacity : opacity);
+  gl.uniform1f(locMaster, state.masterBrightness * (1-blackoutLevel));
+
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuf);
+  gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+}
+
+/* ---------------------------------------------------------------------- */
+/* STATE + PERSISTENCE                                                    */
+/* ---------------------------------------------------------------------- */
+const LS_LAYOUT = 'denmapper.layout.v1';
+const LS_SCENES = 'denmapper.scenes.v1';
+const LS_SETTINGS = 'denmapper.settings.v1';
+const QUALITY = { low:[64,36], medium:[128,72], high:[192,108] };
+
+function defaultSurfaceParams(){
+  return { effect:'grid', color1:'#7c5cff', color2:'#00e5ff', speed:1, density:8, brightness:1, opacity:1, blend:'normal' };
+}
+function newSurface(name, index){
+  const inset = 0.08 + (index%4)*0.03;
+  return {
+    id: uid(), name: name || ('Superficie '+(index+1)),
+    corners: [[inset,inset],[1-inset,inset],[1-inset,1-inset],[inset,1-inset]],
+    ...defaultSurfaceParams()
+  };
+}
+
+let state = {
+  surfaces: [],
+  quality: 'medium',
+  masterBrightness: 1,
+};
+let scenes = [];
+let selected = { surfaceId: null, cornerIndex: null };
+let editMode = false;
+let blackout = false;
+let blackoutLevel = 0; // animated 0..1
+let panelOpen = true;
+let transition = null; // {from:Map(surfaceId->params), t0, dur}
+
+function loadLayout(){
+  try{
+    const raw = localStorage.getItem(LS_LAYOUT);
+    if(raw){ const parsed = JSON.parse(raw); if(parsed && Array.isArray(parsed.surfaces) && parsed.surfaces.length){ return parsed; } }
+  }catch(e){}
+  return { surfaces:[newSurface('Superficie 1',0)], quality:'medium', masterBrightness:1 };
+}
+function saveLayout(){
+  const toSave = {
+    surfaces: state.surfaces.map(s => ({ id:s.id, name:s.name, corners:s.corners, effect:s.effect, color1:s.color1, color2:s.color2, speed:s.speed, density:s.density, brightness:s.brightness, opacity:s.opacity, blend:s.blend })),
+    quality: state.quality, masterBrightness: state.masterBrightness
+  };
+  localStorage.setItem(LS_LAYOUT, JSON.stringify(toSave));
+}
+function loadScenes(){
+  try{ const raw = localStorage.getItem(LS_SCENES); if(raw) return JSON.parse(raw); }catch(e){}
+  return [];
+}
+function saveScenes(){ localStorage.setItem(LS_SCENES, JSON.stringify(scenes)); }
+
+(function init(){
+  const loaded = loadLayout();
+  state.quality = loaded.quality || 'medium';
+  state.masterBrightness = loaded.masterBrightness==null? 1 : loaded.masterBrightness;
+  state.surfaces = loaded.surfaces.map((s,i)=>{
+    const base = newSurface(s.name, i);
+    return Object.assign(base, s, { id: s.id || base.id });
+  });
+  scenes = loadScenes();
+  state.surfaces.forEach(prepareSurfaceRuntime);
+})();
+
+function prepareSurfaceRuntime(s){
+  const [w,h] = QUALITY[state.quality] || QUALITY.medium;
+  s._ecanvas = document.createElement('canvas'); s._ecanvas.width=w; s._ecanvas.height=h;
+  s._ctx = s._ecanvas.getContext('2d');
+  s._tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, s._tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, s._ecanvas);
+  s._vbuf = gl.createBuffer();
+  s._mediaEl = null;
+  s._fireBuf = null; s._imgData = null;
+}
+function resizeSurfaceBuffers(){
+  const [w,h] = QUALITY[state.quality] || QUALITY.medium;
+  state.surfaces.forEach(s=>{
+    s._ecanvas.width = w; s._ecanvas.height = h;
+    s._imgData = null; s._fireBuf = null;
+  });
+}
+
+/* ---------------------------------------------------------------------- */
+/* RENDER LOOP                                                             */
+/* ---------------------------------------------------------------------- */
+let paused = false;
+function renderEffectInto(s, t){
+  const w = s._ecanvas.width, h = s._ecanvas.height;
+  const params = { w,h,t, color1:s.color1, color2:s.color2, speed:s.speed, density:s.density, brightness:s.brightness, surface:s };
+  const fn = (EFFECTS[s.effect] || EFFECTS.grid).draw;
+
+  if(transition && transition.from.has(s.id)){
+    const prog = clamp((performance.now()-transition.t0)/transition.dur, 0, 1);
+    const fromP = transition.from.get(s.id);
+    const fromFn = (EFFECTS[fromP.effect] || EFFECTS.grid).draw;
+    s._ctx.globalAlpha = 1;
+    fromFn(s._ctx, Object.assign({},params,fromP,{w,h,t,surface:s}));
+    s._ctx.globalAlpha = prog;
+    fn(s._ctx, params);
+    s._ctx.globalAlpha = 1;
+    if(prog>=1){ transition.from.delete(s.id); if(transition.from.size===0) transition=null; }
+  } else {
+    fn(s._ctx, params);
+  }
+}
+
+function frame(){
+  requestAnimationFrame(frame);
+  const target = blackout ? 1 : 0;
+  blackoutLevel += (target-blackoutLevel)*0.25;
+  if(Math.abs(target-blackoutLevel)<0.002) blackoutLevel=target;
+
+  gl.clearColor(0,0,0,1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.BLEND);
+
+  const t = nowSec();
+  if(!paused){
+    state.surfaces.forEach(s => renderEffectInto(s, t));
+  }
+  state.surfaces.forEach(s => drawSurfaceGL(s));
+}
+requestAnimationFrame(frame);
+
+/* ---------------------------------------------------------------------- */
+/* HANDLES (calibration UI)                                                */
+/* ---------------------------------------------------------------------- */
+const handlesEl = $('#handles');
+function layoutHandles(){
+  handlesEl.innerHTML = '';
+  if(!editMode) return;
+  const rect = canvas.getBoundingClientRect();
+  state.surfaces.forEach(s=>{
+    s.corners.forEach((c,i)=>{
+      const el = document.createElement('div');
+      el.className = 'handle' + (selected.surfaceId===s.id && selected.cornerIndex===i ? ' selected':'');
+      el.textContent = i+1;
+      el.style.left = (rect.left + c[0]*rect.width) + 'px';
+      el.style.top = (rect.top + c[1]*rect.height) + 'px';
+      el.addEventListener('pointerdown', ev=>{
+        ev.preventDefault();
+        selected = { surfaceId:s.id, cornerIndex:i };
+        renderPanel();
+        layoutHandles();
+        const move = mv=>{
+          const r = canvas.getBoundingClientRect();
+          const nx = clamp((mv.clientX-r.left)/r.width, -0.15, 1.15);
+          const ny = clamp((mv.clientY-r.top)/r.height, -0.15, 1.15);
+          s.corners[i] = [nx,ny];
+          layoutHandles();
+        };
+        const up = ()=>{ window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',up); saveLayout(); };
+        window.addEventListener('pointermove',move);
+        window.addEventListener('pointerup',up);
+      });
+      handlesEl.appendChild(el);
+    });
+  });
+}
+window.addEventListener('keydown', e=>{
+  const tag = (document.activeElement && document.activeElement.tagName || '').toLowerCase();
+  if(tag==='input' || tag==='textarea' || tag==='select') return;
+  if(e.key==='e' || e.key==='E'){ setEditMode(!editMode); }
+  else if(e.key==='f' || e.key==='F'){ toggleFullscreen(); }
+  else if(e.key===' '){ e.preventDefault(); setBlackout(!blackout); }
+  else if(e.key==='Tab'){ e.preventDefault(); setPanelOpen(!panelOpen); }
+  else if(/^[1-9]$/.test(e.key)){ const sc = scenes.find(sc=>String(sc.hotkey)===e.key); if(sc) applyScene(sc.id); }
+  else if(editMode && selected.surfaceId && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){
+    e.preventDefault();
+    const s = state.surfaces.find(x=>x.id===selected.surfaceId);
+    if(!s) return;
+    const rect = canvas.getBoundingClientRect();
+    const step = (e.shiftKey?10:1);
+    const dx = step/rect.width, dy = step/rect.height;
+    const c = s.corners[selected.cornerIndex];
+    if(e.key==='ArrowLeft') c[0]-=dx; if(e.key==='ArrowRight') c[0]+=dx;
+    if(e.key==='ArrowUp') c[1]-=dy; if(e.key==='ArrowDown') c[1]+=dy;
+    layoutHandles(); saveLayout();
+  }
+});
+
+/* ---------------------------------------------------------------------- */
+/* UI: TOP BAR                                                             */
+/* ---------------------------------------------------------------------- */
+function setEditMode(v){
+  editMode = v;
+  $('#editToggle').classList.toggle('primary', v);
+  layoutHandles();
+  resetIdleTimer();
+}
+function setBlackout(v){ blackout=v; $('#blackoutBtn').classList.toggle('primary', v); }
+function setPanelOpen(v){
+  panelOpen = v;
+  $('#panel').classList.toggle('ui-hidden', !v);
+}
+function toggleFullscreen(){
+  if(!document.fullscreenElement){ document.documentElement.requestFullscreen().catch(()=>{}); }
+  else{ document.exitFullscreen().catch(()=>{}); }
+}
+$('#editToggle').onclick = ()=> setEditMode(!editMode);
+$('#fsToggle').onclick = toggleFullscreen;
+$('#blackoutBtn').onclick = ()=> setBlackout(!blackout);
+$('#panelToggle').onclick = ()=> setPanelOpen(!panelOpen);
+$('#helpBtn').onclick = ()=> $('#helpDialog').showModal();
+$('#closeHelp').onclick = ()=> $('#helpDialog').close();
+
+// idle auto-hide of chrome when not editing
+let idleTimer=null;
+function resetIdleTimer(){
+  document.querySelectorAll('.ui').forEach(el=>el.classList.remove('ui-hidden2'));
+  $('#topbar').classList.remove('ui-hidden');
+  if(panelOpen) $('#panel').classList.remove('ui-hidden');
+  clearTimeout(idleTimer);
+  if(editMode) return;
+  idleTimer = setTimeout(()=>{
+    $('#topbar').classList.add('ui-hidden');
+    $('#panel').classList.add('ui-hidden');
+  }, 3500);
+}
+window.addEventListener('pointermove', resetIdleTimer);
+window.addEventListener('pointerdown', resetIdleTimer);
+resetIdleTimer();
+
+/* ---------------------------------------------------------------------- */
+/* UI: PANEL — SURFACES / SCENES / GLOBAL TABS                             */
+/* ---------------------------------------------------------------------- */
+let activeTab = 'surfaces';
+document.querySelectorAll('.tabbtn').forEach(b=>{
+  b.onclick = ()=>{ activeTab=b.dataset.tab; document.querySelectorAll('.tabbtn').forEach(x=>x.classList.toggle('active',x===b)); renderPanel(); };
+});
+
+function ensureSelectedSurface(){
+  if(!state.surfaces.find(s=>s.id===selected.surfaceId)){
+    selected.surfaceId = state.surfaces[0] ? state.surfaces[0].id : null;
+    selected.cornerIndex = 0;
+  }
+}
+
+function renderPanel(){
+  ensureSelectedSurface();
+  const body = $('#tabbody');
+  if(activeTab==='surfaces') body.innerHTML = surfacesTabHtml();
+  else if(activeTab==='scenes') body.innerHTML = scenesTabHtml();
+  else body.innerHTML = globalTabHtml();
+  wireTabEvents();
+}
+
+function surfacesTabHtml(){
+  const list = state.surfaces.map(s=>`
+    <div class="surf-item ${s.id===selected.surfaceId?'active':''}" data-select="${s.id}">
+      <span class="swatch" style="background:${s.color1}"></span>
+      <span class="name">${escapeHtml(s.name)}</span>
+      <button data-dup="${s.id}" title="Duplica">⧉</button>
+      <button data-del="${s.id}" title="Elimina">🗑</button>
+    </div>`).join('');
+  const s = state.surfaces.find(x=>x.id===selected.surfaceId);
+  const effectOptions = Object.entries(EFFECTS).map(([k,v])=>`<option value="${k}" ${s&&s.effect===k?'selected':''}>${v.label}</option>`).join('');
+  const needsMedia = s && (s.effect==='image' || s.effect==='video');
+  return `
+    <button class="btn primary" id="addSurface" style="width:100%;margin-bottom:10px">+ Nuova superficie</button>
+    ${list || '<div class="hint">Nessuna superficie. Aggiungine una.</div>'}
+    <hr/>
+    ${s ? `
+      <div class="field"><label>Nome</label><input type="text" id="sName" value="${escapeHtml(s.name)}"/></div>
+      <div class="field"><label>Effetto</label><select id="sEffect">${effectOptions}</select></div>
+      ${needsMedia ? `<div class="field"><label>File ${s.effect==='video'?'video':'immagine'}</label><input type="file" id="sMedia" accept="${s.effect==='video'?'video/*':'image/*'}"/></div>` : ''}
+      <div class="row2">
+        <div class="field"><label>Colore 1</label><input type="color" id="sColor1" value="${s.color1}"/></div>
+        <div class="field"><label>Colore 2</label><input type="color" id="sColor2" value="${s.color2||'#00e5ff'}"/></div>
+      </div>
+      <div class="field"><label>Velocità (${s.speed.toFixed(2)})</label><input type="range" id="sSpeed" min="0" max="4" step="0.05" value="${s.speed}"/></div>
+      <div class="field"><label>Densità / scala (${s.density})</label><input type="range" id="sDensity" min="1" max="30" step="1" value="${s.density}"/></div>
+      <div class="field"><label>Luminosità (${Math.round(s.brightness*100)}%)</label><input type="range" id="sBrightness" min="0" max="1" step="0.01" value="${s.brightness}"/></div>
+      <div class="field"><label>Opacità (${Math.round(s.opacity*100)}%)</label><input type="range" id="sOpacity" min="0" max="1" step="0.01" value="${s.opacity}"/></div>
+      <div class="field"><label>Blend</label><select id="sBlend">
+        <option value="normal" ${s.blend==='normal'?'selected':''}>Normale</option>
+        <option value="add" ${s.blend==='add'?'selected':''}>Additivo (luce su luce)</option>
+        <option value="screen" ${s.blend==='screen'?'selected':''}>Screen</option>
+      </select></div>
+      <button class="btn" id="resetCorners" style="width:100%">↺ Reimposta rettangolo</button>
+      <div class="hint" style="margin-top:8px">Trascina i pallini numerati sullo stage per deformare questa superficie sulla parete/oggetto reale (tasto <kbd>E</kbd>).</div>
+    ` : ''}
+  `;
+}
+
+function scenesTabHtml(){
+  const list = scenes.map(sc=>`
+    <div class="scene-item">
+      <span class="key">${sc.hotkey||'-'}</span>
+      <span class="name">${escapeHtml(sc.name)}</span>
+      <button data-apply="${sc.id}" title="Applica">▶</button>
+      <button data-update="${sc.id}" title="Aggiorna con stato attuale">💾</button>
+      <button data-rename="${sc.id}" title="Rinomina">✎</button>
+      <button data-delscene="${sc.id}" title="Elimina">🗑</button>
+    </div>`).join('');
+  return `
+    <button class="btn primary" id="saveScene" style="width:100%;margin-bottom:10px">+ Salva scena da stato attuale</button>
+    ${list || '<div class="hint">Nessuna scena salvata. Imposta gli effetti sulle superfici, poi salva una scena per richiamarla dal vivo.</div>'}
+    <hr/>
+    <div class="hint">Tasti <kbd>1</kbd>–<kbd>9</kbd>: richiamano la scena con quel numero (assegnalo con ✎). Il cambio scena è graduale.</div>
+    <hr/>
+    <button class="btn" id="exportScenes" style="width:100%;margin-bottom:8px">⬇ Esporta scene (JSON)</button>
+    <button class="btn" id="importScenesBtn" style="width:100%">⬆ Importa scene (JSON)</button>
+    <div class="hint" style="margin-top:8px">Le scene si abbinano alle superfici per <b>nome</b>: dai lo stesso nome alle superfici sui vari computer/proiettori per far applicare lo stesso look ovunque, senza rete.</div>
+  `;
+}
+
+function globalTabHtml(){
+  return `
+    <div class="field"><label>Luminosità generale (${Math.round(state.masterBrightness*100)}%)</label><input type="range" id="gBrightness" min="0" max="1" step="0.01" value="${state.masterBrightness}"/></div>
+    <div class="field"><label>Qualità rendering effetti</label>
+      <select id="gQuality">
+        <option value="low" ${state.quality==='low'?'selected':''}>Bassa (macchine deboli / Raspberry Pi)</option>
+        <option value="medium" ${state.quality==='medium'?'selected':''}>Media</option>
+        <option value="high" ${state.quality==='high'?'selected':''}>Alta</option>
+      </select>
+    </div>
+    <hr/>
+    <button class="btn danger" id="gBlackout" style="width:100%;margin-bottom:8px">⏻ Blackout tutto (Spazio)</button>
+    <button class="btn" id="gPause" style="width:100%;margin-bottom:8px">${paused?'▶ Riprendi animazioni':'⏸ Pausa animazioni'}</button>
+    <button class="btn" id="gAllBlack" style="width:100%;margin-bottom:8px">Imposta tutte le superfici a "Nero"</button>
+    <button class="btn" id="gAllGrid" style="width:100%">Imposta tutte le superfici a "Griglia calibrazione"</button>
+    <hr/>
+    <div class="hint">Layout (posizione angoli, quante superfici) e parametri si salvano automaticamente in questo browser/computer. Ogni proiettore va calibrato singolarmente.</div>
+    <hr/>
+    <div class="hint">Sincronizzazione multi-proiettore: gli effetti seguono l'orologio di sistema. Con l'ora sincronizzata su tutti i computer e la stessa scena lanciata nello stesso momento, i proiettori restano in fase senza bisogno di rete.</div>
+  `;
+}
+
+function escapeHtml(str){ return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+
+function wireTabEvents(){
+  if(activeTab==='surfaces'){
+    $('#addSurface') && ($('#addSurface').onclick = ()=>{
+      const s = newSurface(null, state.surfaces.length);
+      state.surfaces.push(s); prepareSurfaceRuntime(s);
+      selected = { surfaceId:s.id, cornerIndex:0 };
+      saveLayout(); layoutHandles(); renderPanel();
+    });
+    document.querySelectorAll('[data-select]').forEach(el=> el.onclick = e=>{
+      if(e.target.closest('button')) return;
+      selected = { surfaceId: el.dataset.select, cornerIndex:0 };
+      layoutHandles(); renderPanel();
+    });
+    document.querySelectorAll('[data-dup]').forEach(el=> el.onclick = ()=>{
+      const orig = state.surfaces.find(s=>s.id===el.dataset.dup); if(!orig) return;
+      const copy = Object.assign(newSurface(orig.name+' copia', state.surfaces.length), JSON.parse(JSON.stringify({corners:orig.corners,effect:orig.effect,color1:orig.color1,color2:orig.color2,speed:orig.speed,density:orig.density,brightness:orig.brightness,opacity:orig.opacity,blend:orig.blend})));
+      state.surfaces.push(copy); prepareSurfaceRuntime(copy);
+      selected = { surfaceId:copy.id, cornerIndex:0 };
+      saveLayout(); layoutHandles(); renderPanel();
+    });
+    document.querySelectorAll('[data-del]').forEach(el=> el.onclick = ()=>{
+      if(state.surfaces.length<=1){ toast('Deve restare almeno una superficie'); return; }
+      state.surfaces = state.surfaces.filter(s=>s.id!==el.dataset.del);
+      saveLayout(); layoutHandles(); renderPanel();
+    });
+    const s = state.surfaces.find(x=>x.id===selected.surfaceId);
+    if(s){
+      $('#sName').oninput = e=>{ s.name=e.target.value; saveLayout(); };
+      $('#sName').onchange = ()=> renderPanel();
+      $('#sEffect').onchange = e=>{ s.effect=e.target.value; saveLayout(); renderPanel(); };
+      $('#sColor1').oninput = e=>{ s.color1=e.target.value; saveLayout(); };
+      $('#sColor2') && ($('#sColor2').oninput = e=>{ s.color2=e.target.value; saveLayout(); });
+      $('#sSpeed').oninput = e=>{ s.speed=parseFloat(e.target.value); saveLayout(); $('#sSpeed').previousElementSibling.textContent=`Velocità (${s.speed.toFixed(2)})`; };
+      $('#sDensity').oninput = e=>{ s.density=parseInt(e.target.value); saveLayout(); };
+      $('#sBrightness').oninput = e=>{ s.brightness=parseFloat(e.target.value); saveLayout(); };
+      $('#sOpacity').oninput = e=>{ s.opacity=parseFloat(e.target.value); saveLayout(); };
+      $('#sBlend').onchange = e=>{ s.blend=e.target.value; saveLayout(); };
+      $('#resetCorners') && ($('#resetCorners').onclick = ()=>{
+        const inset=0.08; s.corners=[[inset,inset],[1-inset,inset],[1-inset,1-inset],[inset,1-inset]];
+        saveLayout(); layoutHandles();
+      });
+      const media = $('#sMedia');
+      if(media){
+        media.onchange = e=>{
+          const f = e.target.files[0]; if(!f) return;
+          const url = URL.createObjectURL(f);
+          const el = s.effect==='video' ? document.createElement('video') : new Image();
+          if(s.effect==='video'){ el.muted=true; el.loop=true; el.playsInline=true; el.autoplay=true; el.src=url; el.play().catch(()=>{}); }
+          else { el.src = url; }
+          s._mediaEl = el;
+        };
+      }
+    }
+  } else if(activeTab==='scenes'){
+    $('#saveScene').onclick = ()=>{
+      const name = prompt('Nome della scena:', 'Scena '+(scenes.length+1));
+      if(!name) return;
+      const sc = { id:uid(), name, hotkey: scenes.length<9? String(scenes.length+1): null, surfaces:{} };
+      state.surfaces.forEach(s=>{ sc.surfaces[s.name] = { effect:s.effect, color1:s.color1, color2:s.color2, speed:s.speed, density:s.density, brightness:s.brightness, opacity:s.opacity, blend:s.blend }; });
+      scenes.push(sc); saveScenes(); renderPanel(); toast('Scena salvata: '+name);
+    };
+    document.querySelectorAll('[data-apply]').forEach(el=> el.onclick = ()=> applyScene(el.dataset.apply));
+    document.querySelectorAll('[data-update]').forEach(el=> el.onclick = ()=>{
+      const sc = scenes.find(x=>x.id===el.dataset.update); if(!sc) return;
+      sc.surfaces = {};
+      state.surfaces.forEach(s=>{ sc.surfaces[s.name] = { effect:s.effect, color1:s.color1, color2:s.color2, speed:s.speed, density:s.density, brightness:s.brightness, opacity:s.opacity, blend:s.blend }; });
+      saveScenes(); toast('Scena aggiornata');
+    });
+    document.querySelectorAll('[data-rename]').forEach(el=> el.onclick = ()=>{
+      const sc = scenes.find(x=>x.id===el.dataset.rename); if(!sc) return;
+      const name = prompt('Nuovo nome:', sc.name); if(name) sc.name=name;
+      const hk = prompt('Tasto rapido 1-9 (vuoto per nessuno):', sc.hotkey||'');
+      sc.hotkey = /^[1-9]$/.test(hk||'') ? hk : null;
+      saveScenes(); renderPanel();
+    });
+    document.querySelectorAll('[data-delscene]').forEach(el=> el.onclick = ()=>{
+      scenes = scenes.filter(x=>x.id!==el.dataset.delscene); saveScenes(); renderPanel();
+    });
+    $('#exportScenes').onclick = ()=>{
+      const blob = new Blob([JSON.stringify(scenes,null,2)], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'denmapper-scenes.json'; a.click();
+    };
+    $('#importScenesBtn').onclick = ()=>{ $('#importText').value=''; $('#importDialog').showModal(); };
+  } else {
+    $('#gBrightness').oninput = e=>{ state.masterBrightness=parseFloat(e.target.value); saveLayout(); };
+    $('#gQuality').onchange = e=>{ state.quality=e.target.value; resizeSurfaceBuffers(); saveLayout(); };
+    $('#gBlackout').onclick = ()=> setBlackout(!blackout);
+    $('#gPause').onclick = ()=>{ paused=!paused; renderPanel(); };
+    $('#gAllBlack').onclick = ()=>{ state.surfaces.forEach(s=>s.effect='off'); saveLayout(); renderPanel(); };
+    $('#gAllGrid').onclick = ()=>{ state.surfaces.forEach(s=>s.effect='grid'); saveLayout(); renderPanel(); };
+  }
+}
+
+function applyScene(id){
+  const sc = scenes.find(x=>x.id===id); if(!sc) return;
+  const from = new Map();
+  state.surfaces.forEach(s=>{
+    from.set(s.id, { effect:s.effect, color1:s.color1, color2:s.color2, speed:s.speed, density:s.density, brightness:s.brightness, opacity:s.opacity, blend:s.blend });
+    const target = sc.surfaces[s.name];
+    if(target) Object.assign(s, target);
+  });
+  transition = { from, t0: performance.now(), dur: 900 };
+  saveLayout(); renderPanel();
+  toast('Scena: '+sc.name);
+}
+
+/* ---------------------------------------------------------------------- */
+/* IMPORT DIALOG                                                           */
+/* ---------------------------------------------------------------------- */
+$('#cancelImport').onclick = ()=> $('#importDialog').close();
+$('#confirmImport').onclick = ()=>{
+  try{
+    const data = JSON.parse($('#importText').value);
+    if(!Array.isArray(data)) throw new Error('formato non valido');
+    scenes = scenes.concat(data.map(sc=>({...sc, id:uid()})));
+    saveScenes(); renderPanel(); $('#importDialog').close();
+    toast('Scene importate: '+data.length);
+  }catch(e){ alert('JSON non valido: '+e.message); }
+};
+
+/* ---------------------------------------------------------------------- */
+/* BOOT                                                                    */
+/* ---------------------------------------------------------------------- */
+resizeCanvas();
+renderPanel();
+if(!localStorage.getItem('denmapper.seenHelp')){
+  localStorage.setItem('denmapper.seenHelp','1');
+  $('#helpDialog').showModal();
+}
+})();
+</script>
+</body>
+</html>
