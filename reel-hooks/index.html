@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0510" />
+<title>Reel Hook Batch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0510; --panel:#150c22; --panel2:#1b1130; --line:#2c1f47; --text:#f5f1ff; --muted:#a294c2;
+    --pink:#ff3fb0; --purple:#8b5cf6; --ok:#33e0a0; --radius:16px; --max:900px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:radial-gradient(120% 100% at 50% -10%,#241238 0%,var(--bg) 55%);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  button,input,select,textarea{font:inherit;color:inherit}
+  .wrap{max-width:var(--max);margin:0 auto;padding:26px 16px 70px}
+  header{text-align:center;padding:20px 10px 8px}
+  .logo{display:inline-flex;gap:8px;align-items:center;font-weight:800;letter-spacing:.02em;color:#fff;background:linear-gradient(135deg,var(--pink),var(--purple));padding:6px 14px;border-radius:999px;font-size:.85rem}
+  h1{margin:16px 0 8px;font-size:clamp(1.5rem,4vw,2.1rem)}
+  .sub{color:var(--muted);max-width:520px;margin:0 auto;line-height:1.5;font-size:.95rem}
+
+  .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:18px}
+  .card h2{margin:0 0 4px;font-size:1.02rem;display:flex;align-items:center;gap:8px}
+  .step{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--purple));display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;flex:0 0 auto}
+  .card .hint{color:var(--muted);font-size:.82rem;margin:4px 0 14px;line-height:1.5}
+
+  textarea{width:100%;background:#0c0716;border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:0;resize:vertical;min-height:120px;font-size:.92rem;line-height:1.6}
+  .dropzone{border:1.5px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--muted);cursor:pointer;font-size:.86rem;transition:border-color .15s,background .15s}
+  .dropzone:hover,.dropzone.drag{border-color:var(--pink);background:rgba(255,63,176,.05)}
+  input[type=file]{display:none}
+  .filelist{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .filechip{display:flex;align-items:center;gap:6px;background:#0c0716;border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:.78rem;max-width:180px}
+  .filechip img,.filechip video{width:28px;height:28px;object-fit:cover;border-radius:6px;flex:0 0 auto}
+  .filechip .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .filechip button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.9rem;padding:0 2px}
+
+  .row{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .field{display:flex;flex-direction:column;gap:6px;min-width:160px;flex:1}
+  .field label{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  select,.numfield{background:#0c0716;border:1px solid var(--line);border-radius:10px;padding:9px 10px;outline:0}
+  input[type=range]{width:100%}
+
+  .genbtn{width:100%;margin-top:20px;padding:16px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;font-weight:800;font-size:1rem;cursor:pointer;box-shadow:0 14px 30px rgba(139,92,246,.3)}
+  .genbtn:disabled{opacity:.5;cursor:not-allowed}
+  .genbtn:hover:not(:disabled){filter:brightness(1.08)}
+
+  .progressWrap{margin-top:14px;display:none}
+  .progressbar{height:10px;border-radius:999px;background:#0c0716;border:1px solid var(--line);overflow:hidden}
+  .progressbar>div{height:100%;width:0%;background:linear-gradient(90deg,var(--pink),var(--purple));transition:width .2s}
+  .progressLabel{font-size:.8rem;color:var(--muted);margin-top:6px;text-align:center}
+
+  .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:16px}
+  .resultCard{background:#0c0716;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .resultCard video{width:100%;aspect-ratio:9/16;object-fit:cover;background:#000}
+  .resultCard .meta{padding:9px 10px;font-size:.76rem;color:var(--muted);flex:1}
+  .resultCard .dl{display:block;text-align:center;padding:9px;background:var(--panel2);border-top:1px solid var(--line);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:700}
+  .resultCard .dl:hover{background:var(--panel)}
+
+  .downloadAllBar{display:none;margin-top:16px;gap:10px}
+  .btn2{padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;font-weight:700;font-size:.86rem}
+  .btn2:hover{border-color:var(--pink)}
+
+  footer{text-align:center;color:var(--muted);font-size:.76rem;margin-top:40px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">⚡ REEL HOOK BATCH</div>
+    <h1>Genera reel con testo fisheye, in automatico</h1>
+    <p class="sub">Incolla le tue frasi hook, carica sfondi (foto o video), il tool produce un video pronto per ognuna — con l'effetto testo "bulge/fisheye" bruciato dentro. Tutto gira nel tuo browser, nessun file lascia il computer.</p>
+  </header>
+
+  <div class="card">
+    <h2><span class="step">1</span> Le tue frasi hook</h2>
+    <p class="hint">Una frase per riga. Verrà generato un video per ogni riga (gli sfondi si alternano automaticamente se ne hai meno delle frasi).</p>
+    <textarea id="hooksInput" placeholder="Immagina odiarmi mentre io...
+Questo è il tuo segno per...
+Non me la prendo, sto solo osservando..."></textarea>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">2</span> Sfondi (foto o video)</h2>
+    <p class="hint">Carica una o più foto/video da usare come sfondo. Le foto diventano automaticamente un breve clip con zoom lento (effetto Ken Burns).</p>
+    <label class="dropzone" id="dropzone">
+      📁 Trascina qui i file, o clicca per scegliere<br/><span style="font-size:.76rem">JPG, PNG, MP4, WEBM, MOV</span>
+      <input type="file" id="mediaInput" accept="image/*,video/*" multiple />
+    </label>
+    <div class="filelist" id="fileList"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">3</span> Stile e opzioni</h2>
+    <div class="row">
+      <div class="field">
+        <label>Intensità fisheye</label>
+        <input type="range" id="optStrength" min="0" max="100" value="55" />
+      </div>
+      <div class="field">
+        <label>Posizione testo</label>
+        <select id="optPos"><option value="center">Centro</option><option value="top">Alto</option><option value="bottom" selected>Basso</option></select>
+      </div>
+      <div class="field">
+        <label>Colore testo</label>
+        <select id="optColor"><option value="white">Bianco + bordo nero</option><option value="black">Nero + bordo bianco</option><option value="pink">Rosa acceso</option></select>
+      </div>
+      <div class="field">
+        <label>Durata clip da foto (sec)</label>
+        <select id="optDur"><option value="3">3s</option><option value="4" selected>4s</option><option value="5">5s</option><option value="6">6s</option></select>
+      </div>
+      <div class="field">
+        <label>Ordine sfondi</label>
+        <select id="optOrder"><option value="cycle">In ordine</option><option value="random">Casuale</option></select>
+      </div>
+    </div>
+  </div>
+
+  <button class="genbtn" id="genBtn">🎬 Genera tutti i reel</button>
+  <div class="progressWrap" id="progressWrap">
+    <div class="progressbar"><div id="progressFill"></div></div>
+    <div class="progressLabel" id="progressLabel">In corso...</div>
+  </div>
+
+  <div class="downloadAllBar" id="downloadAllBar">
+    <button class="btn2" id="downloadZipBtn">⬇ Scarica tutto (ZIP)</button>
+  </div>
+  <div class="results" id="results"></div>
+
+  <footer>Elaborazione 100% locale nel browser — niente upload su server esterni. Formato esportato: WebM (importalo in CapCut/InShot per l'export finale in MP4 se ti serve per l'upload nativo).</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+
+/* ------------------------------------------------------------------ */
+/* STATE                                                                */
+/* ------------------------------------------------------------------ */
+let mediaFiles = []; // {id, file, type:'image'|'video', url, thumb}
+let results = []; // {name, blob, url}
+
+/* ------------------------------------------------------------------ */
+/* FILE INPUT / DROPZONE                                               */
+/* ------------------------------------------------------------------ */
+const dropzone = $('#dropzone');
+const mediaInput = $('#mediaInput');
+dropzone.addEventListener('click', () => mediaInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.classList.remove('drag');
+  addFiles(e.dataTransfer.files);
+});
+mediaInput.addEventListener('change', e => { addFiles(e.target.files); mediaInput.value=''; });
+
+function addFiles(fileList){
+  Array.from(fileList).forEach(file => {
+    const type = file.type.startsWith('video') ? 'video' : 'image';
+    const url = URL.createObjectURL(file);
+    mediaFiles.push({ id: Math.random().toString(36).slice(2), file, type, url });
+  });
+  renderFileList();
+}
+function renderFileList(){
+  const el = $('#fileList');
+  el.innerHTML = '';
+  mediaFiles.forEach(m => {
+    const chip = document.createElement('div');
+    chip.className = 'filechip';
+    const media = m.type === 'video' ? document.createElement('video') : document.createElement('img');
+    media.src = m.url; if(m.type==='video'){ media.muted = true; }
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = m.file.name;
+    const rm = document.createElement('button'); rm.textContent = '✕';
+    rm.onclick = () => { mediaFiles = mediaFiles.filter(x => x.id !== m.id); renderFileList(); };
+    chip.appendChild(media); chip.appendChild(nm); chip.appendChild(rm);
+    el.appendChild(chip);
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* TEXT WRAPPING + FIT                                                 */
+/* ------------------------------------------------------------------ */
+function fitAndWrapText(ctx, text, maxWidth, maxHeight, startSize){
+  let size = startSize;
+  let lines = [];
+  while(size > 18){
+    ctx.font = `900 ${size}px 'Archivo Black', 'Arial Black', Impact, sans-serif`;
+    lines = wrapLine(ctx, text, maxWidth);
+    const totalH = lines.length * size * 1.18;
+    if(totalH <= maxHeight) break;
+    size -= 4;
+  }
+  return { size, lines };
+}
+function wrapLine(ctx, text, maxWidth){
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines = []; let cur = '';
+  words.forEach(w => {
+    const test = cur ? cur + ' ' + w : w;
+    if(ctx.measureText(test).width > maxWidth && cur){ lines.push(cur); cur = w; }
+    else cur = test;
+  });
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+/* ------------------------------------------------------------------ */
+/* WEBGL BULGE/FISHEYE TEXT RENDERER                                   */
+/* Renders styled text to an offscreen 2D canvas, then distorts it     */
+/* with a radial "spherize" shader on a small WebGL canvas.            */
+/* ------------------------------------------------------------------ */
+const bulgeGL = document.createElement('canvas');
+const gl = bulgeGL.getContext('webgl', { premultipliedAlpha:true, alpha:true });
+let bulgeProg, bulgeLocPos, bulgeLocUv, bulgeLocTex, bulgeLocStrength, bulgeVbuf;
+if(gl){
+  const VS = `attribute vec2 aPos; attribute vec2 aUv; varying vec2 vUv; void main(){ vUv=aUv; gl_Position=vec4(aPos,0.0,1.0); }`;
+  const FS = `
+    precision mediump float; varying vec2 vUv; uniform sampler2D uTex; uniform float uStrength;
+    void main(){
+      vec2 c = vUv - 0.5;
+      float r = length(c) / 0.5;
+      if(r > 1.0){ gl_FragColor = vec4(0.0); return; }
+      vec2 dir = (r > 0.0005) ? normalize(c) : vec2(0.0);
+      float newR = pow(r, 1.0 + uStrength);
+      vec2 srcUv = dir * newR * 0.5 + 0.5;
+      gl_FragColor = texture2D(uTex, clamp(srcUv, 0.0, 1.0));
+    }`;
+  function compile(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; }
+  bulgeProg = gl.createProgram();
+  gl.attachShader(bulgeProg, compile(gl.VERTEX_SHADER, VS));
+  gl.attachShader(bulgeProg, compile(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(bulgeProg);
+  gl.useProgram(bulgeProg);
+  bulgeLocPos = gl.getAttribLocation(bulgeProg, 'aPos');
+  bulgeLocUv = gl.getAttribLocation(bulgeProg, 'aUv');
+  bulgeLocTex = gl.getUniformLocation(bulgeProg, 'uTex');
+  bulgeLocStrength = gl.getUniformLocation(bulgeProg, 'uStrength');
+  bulgeVbuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, bulgeVbuf);
+  // fullscreen quad: pos.xy, uv.xy
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1,-1, 0,1,   1,-1, 1,1,   1,1, 1,0,
+    -1,-1, 0,1,   1,1, 1,0,   -1,1, 0,0
+  ]), gl.STATIC_DRAW);
+}
+const bulgeTex = gl ? gl.createTexture() : null;
+
+/**
+ * Renders text with bulge/fisheye distortion into a transparent canvas.
+ * Returns a canvas element (textCanvas) ready to be drawn onto the main stage.
+ */
+const srcCanvas = document.createElement('canvas');
+const srcCtx = srcCanvas.getContext('2d');
+function renderBulgeText(text, w, h, strength01, colorMode){
+  srcCanvas.width = w; srcCanvas.height = h;
+  srcCtx.clearRect(0,0,w,h);
+  srcCtx.textAlign = 'center'; srcCtx.textBaseline = 'middle';
+  const { size, lines } = fitAndWrapText(srcCtx, text, w*0.86, h*0.86, Math.floor(h*0.22));
+  srcCtx.font = `900 ${size}px 'Archivo Black', 'Arial Black', Impact, sans-serif`;
+  const lineH = size * 1.18;
+  const totalH = lines.length * lineH;
+  let y = h/2 - totalH/2 + lineH/2;
+
+  let fill = '#ffffff', stroke = '#000000';
+  if(colorMode === 'black'){ fill = '#000000'; stroke = '#ffffff'; }
+  if(colorMode === 'pink'){ fill = '#ff3fb0'; stroke = '#1a0a20'; }
+
+  lines.forEach(line => {
+    srcCtx.lineJoin = 'round';
+    srcCtx.miterLimit = 2;
+    srcCtx.lineWidth = size * 0.16;
+    srcCtx.strokeStyle = stroke;
+    srcCtx.strokeText(line, w/2, y);
+    srcCtx.fillStyle = fill;
+    srcCtx.fillText(line, w/2, y);
+    y += lineH;
+  });
+
+  if(!gl){ return srcCanvas; } // fallback: no WebGL, return undistorted text
+
+  bulgeGL.width = w; bulgeGL.height = h;
+  gl.viewport(0,0,w,h);
+  gl.clearColor(0,0,0,0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+  gl.bindTexture(gl.TEXTURE_2D, bulgeTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, srcCanvas);
+
+  gl.useProgram(bulgeProg);
+  gl.bindBuffer(gl.ARRAY_BUFFER, bulgeVbuf);
+  gl.enableVertexAttribArray(bulgeLocPos); gl.vertexAttribPointer(bulgeLocPos,2,gl.FLOAT,false,16,0);
+  gl.enableVertexAttribArray(bulgeLocUv); gl.vertexAttribPointer(bulgeLocUv,2,gl.FLOAT,false,16,8);
+  gl.uniform1i(bulgeLocTex, 0);
+  gl.uniform1f(bulgeLocStrength, strength01);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+  return bulgeGL;
+}
+
+/* ------------------------------------------------------------------ */
+/* JOB RENDERING: composite background + bulge text -> MediaRecorder   */
+/* ------------------------------------------------------------------ */
+const STAGE_W = 720, STAGE_H = 1280;
+const stage = document.createElement('canvas');
+stage.width = STAGE_W; stage.height = STAGE_H;
+const stageCtx = stage.getContext('2d');
+
+function pickMimeType(){
+  const cands = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  for(const c of cands){ if(window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c; }
+  return 'video/webm';
+}
+
+function drawCover(ctx, media, mw, mh, dx, dy, dw, dh, zoom){
+  zoom = zoom || 1;
+  const scale = Math.max(dw/mw, dh/mh) * zoom;
+  const sw = dw/scale, sh = dh/scale;
+  const sx = (mw-sw)/2, sy = (mh-sh)/2;
+  ctx.drawImage(media, sx, sy, sw, sh, dx, dy, dw, dh);
+}
+
+async function renderJob(text, mediaItem, opts, onFrame){
+  return new Promise(async (resolve, reject) => {
+    try{
+      const strength = opts.strength;
+      const textBoxH = STAGE_H * 0.34;
+      let textY;
+      if(opts.pos==='top') textY = STAGE_H*0.06;
+      else if(opts.pos==='bottom') textY = STAGE_H - textBoxH - STAGE_H*0.09;
+      else textY = STAGE_H/2 - textBoxH/2;
+
+      const stream = stage.captureStream(30);
+      const rec = new MediaRecorder(stream, { mimeType: pickMimeType(), videoBitsPerSecond: 6_000_000 });
+      const chunks = [];
+      rec.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
+      rec.onstop = () => resolve(new Blob(chunks, { type:'video/webm' }));
+      rec.onerror = reject;
+
+      let mediaEl, naturalW, naturalH, duration;
+      if(mediaItem.type === 'image'){
+        mediaEl = new Image(); mediaEl.src = mediaItem.url;
+        await mediaEl.decode().catch(()=>{});
+        naturalW = mediaEl.naturalWidth; naturalH = mediaEl.naturalHeight;
+        duration = opts.imgDuration;
+      } else {
+        mediaEl = document.createElement('video');
+        mediaEl.src = mediaItem.url; mediaEl.muted = true; mediaEl.playsInline = true;
+        await new Promise((res, rej) => {
+          const timer = setTimeout(() => rej(new Error(`Timeout caricando: ${mediaItem.file.name}`)), 10000);
+          mediaEl.onloadedmetadata = () => { clearTimeout(timer); res(); };
+          mediaEl.onerror = () => { clearTimeout(timer); rej(new Error(`Formato video non supportato dal browser: ${mediaItem.file.name}`)); };
+        });
+        naturalW = mediaEl.videoWidth; naturalH = mediaEl.videoHeight;
+        duration = Math.min(mediaEl.duration || 6, 15);
+        await mediaEl.play().catch(()=>{});
+      }
+
+      const start = performance.now();
+      rec.start();
+
+      function frame(){
+        const now = performance.now();
+        const t = (now - start) / 1000;
+        if(t >= duration){
+          stageCtx.clearRect(0,0,STAGE_W,STAGE_H);
+          if(mediaItem.type==='image') drawCover(stageCtx, mediaEl, naturalW, naturalH, 0,0,STAGE_W,STAGE_H, 1 + 0.08);
+          else drawCover(stageCtx, mediaEl, naturalW, naturalH, 0,0,STAGE_W,STAGE_H, 1);
+          const textCanvas = renderBulgeText(text, STAGE_W, textBoxH, strength, opts.color);
+          stageCtx.drawImage(textCanvas, 0, textY, STAGE_W, textBoxH);
+          setTimeout(() => { rec.stop(); if(mediaEl.pause) mediaEl.pause(); }, 60);
+          return;
+        }
+        stageCtx.clearRect(0,0,STAGE_W,STAGE_H);
+        if(mediaItem.type === 'image'){
+          const zoom = 1 + 0.08 * (t/duration);
+          drawCover(stageCtx, mediaEl, naturalW, naturalH, 0,0,STAGE_W,STAGE_H, zoom);
+        } else {
+          drawCover(stageCtx, mediaEl, naturalW, naturalH, 0,0,STAGE_W,STAGE_H, 1);
+        }
+        // entrance pop for the text (first 0.45s)
+        const pop = Math.min(1, t/0.45);
+        const eased = 1 - Math.pow(1-pop, 3);
+        const dynStrength = strength * (0.4 + 0.6*eased);
+        const textCanvas = renderBulgeText(text, STAGE_W, textBoxH, dynStrength, opts.color);
+        stageCtx.save();
+        stageCtx.globalAlpha = eased;
+        stageCtx.drawImage(textCanvas, 0, textY, STAGE_W, textBoxH);
+        stageCtx.restore();
+
+        if(onFrame) onFrame(t/duration);
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    } catch(err){ reject(err); }
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* BATCH ORCHESTRATION                                                  */
+/* ------------------------------------------------------------------ */
+$('#genBtn').addEventListener('click', async () => {
+  const hooks = $('#hooksInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!hooks.length){ alert('Inserisci almeno una frase hook.'); return; }
+  if(!mediaFiles.length){ alert('Carica almeno uno sfondo (foto o video).'); return; }
+
+  const opts = {
+    strength: parseInt($('#optStrength').value,10)/100 * 1.4,
+    pos: $('#optPos').value,
+    color: $('#optColor').value,
+    imgDuration: parseInt($('#optDur').value,10),
+    order: $('#optOrder').value
+  };
+
+  let order = mediaFiles.slice();
+  if(opts.order === 'random'){ order = order.sort(()=>Math.random()-0.5); }
+
+  results = [];
+  $('#results').innerHTML = '';
+  $('#downloadAllBar').style.display = 'none';
+  $('#genBtn').disabled = true;
+  $('#progressWrap').style.display = 'block';
+
+  for(let i=0;i<hooks.length;i++){
+    const media = order[i % order.length];
+    $('#progressLabel').textContent = `Genero video ${i+1} di ${hooks.length}...`;
+    $('#progressFill').style.width = Math.round((i/hooks.length)*100) + '%';
+    try{
+      const blob = await renderJob(hooks[i], media, opts, (p) => {
+        const overall = (i + p) / hooks.length;
+        $('#progressFill').style.width = Math.round(overall*100) + '%';
+      });
+      const url = URL.createObjectURL(blob);
+      const name = `reel_${String(i+1).padStart(2,'0')}_${slug(hooks[i])}.webm`;
+      results.push({ name, blob, url, text: hooks[i] });
+      addResultCard(results[results.length-1]);
+    } catch(err){
+      console.error('Errore nel job', i, err);
+      addErrorCard(hooks[i], err.message || String(err));
+    }
+  }
+
+  $('#progressFill').style.width = '100%';
+  $('#progressLabel').textContent = `Fatto — ${results.length}/${hooks.length} video generati.`;
+  $('#genBtn').disabled = false;
+  if(results.length) $('#downloadAllBar').style.display = 'flex';
+});
+
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,30) || 'hook'; }
+
+function addErrorCard(text, message){
+  const card = document.createElement('div');
+  card.className = 'resultCard';
+  card.style.cssText = 'align-items:center;justify-content:center;padding:16px;text-align:center;color:#ff8f9c;border-color:#5c2130;';
+  card.innerHTML = `<div style="font-size:1.4rem">⚠️</div><div class="meta" style="color:#ff8f9c">${escapeHtml(text)}</div><div class="meta" style="font-size:.7rem">${escapeHtml(message)}</div>`;
+  $('#results').appendChild(card);
+}
+function escapeHtml(s=''){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function addResultCard(r){
+  const card = document.createElement('div');
+  card.className = 'resultCard';
+  const video = document.createElement('video');
+  video.src = r.url; video.controls = true; video.loop = true; video.muted = true;
+  const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = r.text;
+  const dl = document.createElement('a'); dl.className='dl'; dl.href = r.url; dl.download = r.name; dl.textContent = '⬇ Scarica';
+  card.appendChild(video); card.appendChild(meta); card.appendChild(dl);
+  $('#results').appendChild(card);
+}
+
+$('#downloadZipBtn').addEventListener('click', async () => {
+  if(!window.JSZip){ alert('JSZip non disponibile (serve connessione internet la prima volta). Scarica i video singolarmente con i pulsanti sotto ogni anteprima.'); return; }
+  const btn = $('#downloadZipBtn'); const old = btn.textContent; btn.textContent = 'Preparo lo ZIP...'; btn.disabled = true;
+  try{
+    const zip = new JSZip();
+    results.forEach(r => zip.file(r.name, r.blob));
+    const content = await zip.generateAsync({ type:'blob' });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a'); a.href = url; a.download = 'reel-hook-batch.zip'; a.click();
+  } finally { btn.textContent = old; btn.disabled = false; }
+});
+})();
+</script>
+</body>
+</html>
