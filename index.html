@@ -1,386 +1,495 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b0b12" />
-  <title>Lara&Den movies</title>
-  <style>
-    :root{
-      --bg:#09090f;--bg2:#0d0f18;--panel:#141622;--panel2:#191c2a;--line:#282d40;--text:#f3f5fa;--muted:#9fa7bf;
-      --red:#e4262f;--red2:#ff5e57;--gold:#f2bf4b;--ok:#31c48d;--warn:#ffb454;--blue:#6aa7ff;--radius:22px;
-      --shadow:0 18px 40px rgba(0,0,0,.35);--max:780px;
-    }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    body{padding:0 0 calc(88px + env(safe-area-inset-bottom))}
-    button,input,select,textarea{font:inherit}
-    .app{max-width:var(--max);margin:0 auto;padding:14px 14px 32px}
-    .hero{position:sticky;top:0;z-index:30;padding:10px 0 14px;background:linear-gradient(180deg,rgba(9,9,15,.98),rgba(9,9,15,.85) 72%,rgba(9,9,15,0));backdrop-filter:blur(10px)}
-    .brand{display:flex;gap:12px;align-items:center;padding:12px;border-radius:26px;background:rgba(20,22,34,.88);border:1px solid rgba(255,255,255,.06);box-shadow:var(--shadow)}
-    .logo{width:56px;height:40px;flex:0 0 auto}
-    .brand h1{margin:0;font-size:1.2rem;line-height:1.05}
-    .brand p{margin:4px 0 0;color:var(--muted);font-size:.82rem}
-    .row{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-top:12px}
-    .search,.mini{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);padding:12px 14px;border-radius:18px}
-    .search input{width:100%;border:0;outline:0;background:none;color:var(--text);font-size:1rem}
-    .btn,.chip,.tab{border:0;cursor:pointer}
-    .btn{min-height:46px;padding:12px 14px;border-radius:18px;background:var(--panel);color:var(--text);border:1px solid var(--line)}
-    .btn-primary{background:linear-gradient(135deg,var(--red),var(--red2));border:0;font-weight:700}
-    .btn-soft{background:var(--panel2)}
-    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
-    .stat{padding:12px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
-    .stat strong{display:block;font-size:1.1rem}.stat span{font-size:.78rem;color:var(--muted)}
-    .toolbar,.filters{display:flex;gap:10px;overflow:auto;padding-bottom:4px;scrollbar-width:none}.toolbar::-webkit-scrollbar,.filters::-webkit-scrollbar{display:none}
-    .tab,.chip{white-space:nowrap;padding:11px 14px;border-radius:999px;background:#1c2031;color:var(--muted);border:1px solid transparent}
-    .tab.active,.chip.active{color:var(--text);background:linear-gradient(180deg,#252a3f,#181c2a);border-color:#3b4463}
-    .filters{margin-top:10px}
-    .panelbar{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:14px;padding:12px 14px;border-radius:20px;background:var(--panel);border:1px solid var(--line)}
-    .small{font-size:.82rem;color:var(--muted)}
-    .section{display:grid;gap:14px;margin-top:16px}
-    .group{background:linear-gradient(180deg,rgba(24,27,40,.98),rgba(18,20,30,.98));border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:var(--shadow)}
-    .group-head{padding:14px 14px 12px;display:grid;gap:8px}
-    .head-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
-    .group h2{margin:0;font-size:1rem}.muted{color:var(--muted)}
-    .progress{height:10px;background:#0f1220;border-radius:999px;overflow:hidden;border:1px solid #232844}
-    .progress > div{height:100%;background:linear-gradient(90deg,var(--red),var(--gold));width:0%}
-    .cards{display:grid;gap:10px;padding:0 10px 10px}
-    .card{display:grid;grid-template-columns:82px 1fr;gap:12px;padding:12px;border-radius:20px;background:#10131d;border:1px solid #242941}
-    .poster{width:82px;height:118px;border-radius:14px;object-fit:cover;background:linear-gradient(135deg,#252838,#141725)}
-    .poster.placeholder{display:grid;place-items:center;font-size:1.5rem;color:#fff;border:1px dashed #39405f}
-    .card-title{font-weight:700;line-height:1.15;margin-bottom:8px}
-    .meta,.actions{display:flex;gap:8px;flex-wrap:wrap}
-    .pill{padding:7px 10px;border-radius:999px;background:#20253a;color:var(--muted);font-size:.76rem}
-    .seen{background:rgba(49,196,141,.17);color:#daf7ea}.progressing{background:rgba(255,180,84,.18);color:#fff0d8}.planned{background:rgba(106,167,255,.16);color:#ddebff}
-    .notes{margin-top:8px;color:#d8dcef;font-size:.87rem}
-    .tiny{min-height:auto;padding:9px 11px;border-radius:14px;font-size:.82rem}
-    .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:40;width:62px;height:62px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--red),var(--red2));color:#fff;font-size:1.9rem;box-shadow:0 14px 30px rgba(228,38,47,.35);cursor:pointer}
-    dialog{width:min(100%,var(--max));border:0;padding:0;background:transparent} dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(5px)}
-    .sheet{background:linear-gradient(180deg,#171925,#10111a);border:1px solid #2b3047;border-radius:28px;padding:16px;box-shadow:var(--shadow)}
-    .sheet h3{margin:0 0 12px}.grid{display:grid;gap:10px}.field{display:grid;gap:7px}.field label{font-size:.84rem;color:var(--muted)}
-    .field input,.field select,.field textarea{width:100%;background:#0b0d14;color:var(--text);border:1px solid var(--line);padding:13px 14px;border-radius:16px;outline:0}
-    .check{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:#0d1018;border:1px solid var(--line)}
-    .actions2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-    .catalog{display:grid;gap:10px}.suggestion{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
-    .empty{padding:24px 16px;text-align:center;color:var(--muted)}
-    @media (max-width:540px){.row{grid-template-columns:1fr auto}.settings-only{display:none}.stats{grid-template-columns:repeat(2,1fr)}.card{grid-template-columns:72px 1fr}.poster{width:72px;height:104px}}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0510" />
+<title>Reel Hook Batch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0510; --panel:#150c22; --panel2:#1b1130; --line:#2c1f47; --text:#f5f1ff; --muted:#a294c2;
+    --pink:#ff3fb0; --purple:#8b5cf6; --ok:#33e0a0; --radius:16px; --max:900px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:radial-gradient(120% 100% at 50% -10%,#241238 0%,var(--bg) 55%);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  button,input,select,textarea{font:inherit;color:inherit}
+  .wrap{max-width:var(--max);margin:0 auto;padding:26px 16px 70px}
+  header{text-align:center;padding:20px 10px 8px}
+  .logo{display:inline-flex;gap:8px;align-items:center;font-weight:800;letter-spacing:.02em;color:#fff;background:linear-gradient(135deg,var(--pink),var(--purple));padding:6px 14px;border-radius:999px;font-size:.85rem}
+  h1{margin:16px 0 8px;font-size:clamp(1.5rem,4vw,2.1rem)}
+  .sub{color:var(--muted);max-width:520px;margin:0 auto;line-height:1.5;font-size:.95rem}
+
+  .card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:18px}
+  .card h2{margin:0 0 4px;font-size:1.02rem;display:flex;align-items:center;gap:8px}
+  .step{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--purple));display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;flex:0 0 auto}
+  .card .hint{color:var(--muted);font-size:.82rem;margin:4px 0 14px;line-height:1.5}
+
+  textarea{width:100%;background:#0c0716;border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:0;resize:vertical;min-height:120px;font-size:.92rem;line-height:1.6}
+  .dropzone{border:1.5px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--muted);cursor:pointer;font-size:.86rem;transition:border-color .15s,background .15s}
+  .dropzone:hover,.dropzone.drag{border-color:var(--pink);background:rgba(255,63,176,.05)}
+  input[type=file]{display:none}
+  .filelist{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .filechip{display:flex;align-items:center;gap:6px;background:#0c0716;border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:.78rem;max-width:180px}
+  .filechip img,.filechip video{width:28px;height:28px;object-fit:cover;border-radius:6px;flex:0 0 auto}
+  .filechip .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .filechip button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.9rem;padding:0 2px}
+
+  .row{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .field{display:flex;flex-direction:column;gap:6px;min-width:160px;flex:1}
+  .field label{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  select,.numfield{background:#0c0716;border:1px solid var(--line);border-radius:10px;padding:9px 10px;outline:0}
+  input[type=range]{width:100%}
+
+  .genbtn{width:100%;margin-top:20px;padding:16px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--pink),var(--purple));color:#fff;font-weight:800;font-size:1rem;cursor:pointer;box-shadow:0 14px 30px rgba(139,92,246,.3)}
+  .genbtn:disabled{opacity:.5;cursor:not-allowed}
+  .genbtn:hover:not(:disabled){filter:brightness(1.08)}
+
+  .progressWrap{margin-top:14px;display:none}
+  .progressbar{height:10px;border-radius:999px;background:#0c0716;border:1px solid var(--line);overflow:hidden}
+  .progressbar>div{height:100%;width:0%;background:linear-gradient(90deg,var(--pink),var(--purple));transition:width .2s}
+  .progressLabel{font-size:.8rem;color:var(--muted);margin-top:6px;text-align:center}
+
+  .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:16px}
+  .resultCard{background:#0c0716;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .resultCard video{width:100%;aspect-ratio:9/16;object-fit:cover;background:#000}
+  .resultCard .meta{padding:9px 10px;font-size:.76rem;color:var(--muted);flex:1}
+  .resultCard .dl{display:block;text-align:center;padding:9px;background:var(--panel2);border-top:1px solid var(--line);color:var(--text);text-decoration:none;font-size:.8rem;font-weight:700}
+  .resultCard .dl:hover{background:var(--panel)}
+
+  .downloadAllBar{display:none;margin-top:16px;gap:10px}
+  .btn2{padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;font-weight:700;font-size:.86rem}
+  .btn2:hover{border-color:var(--pink)}
+
+  footer{text-align:center;color:var(--muted);font-size:.76rem;margin-top:40px}
+</style>
 </head>
 <body>
-  <div class="app">
-    <div class="hero">
-      <div class="brand">
-        <svg class="logo" viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" aria-label="Logo Lara&Den movies">
-          <defs>
-            <linearGradient id="g1" x1="0" x2="1"><stop offset="0%" stop-color="#a10d14"/><stop offset="100%" stop-color="#ff4141"/></linearGradient>
-            <linearGradient id="g2" x1="0" x2="1"><stop offset="0%" stop-color="#ff6767"/><stop offset="100%" stop-color="#cf151d"/></linearGradient>
-          </defs>
-          <circle cx="80" cy="49" r="18" fill="#f2bf4b" opacity=".95"/>
-          <path d="M16 70c16-3 25-11 34-25 8-12 22-17 38-17-11 8-16 14-21 25-5 11-18 22-38 26-6 1-10 0-13-9z" fill="url(#g1)"/>
-          <path d="M144 70c-16-3-25-11-34-25-8-12-22-17-38-17 11 8 16 14 21 25 5 11 18 22 38 26 6 1 10 0 13-9z" fill="url(#g2)"/>
-        </svg>
-        <div><h1>Lara&Den movies</h1><p>Locandine, filtri e progresso franchise</p></div>
-      </div>
-      <div class="row">
-        <div class="search"><span>🔎</span><input id="searchInput" type="search" placeholder="Cerca titolo, saga o nota" /></div>
-        <button class="btn btn-primary" id="addBtn">+ Aggiungi</button>
-        <button class="btn settings-only" id="settingsBtn">⚙️</button>
-      </div>
-      <div class="stats" id="stats"></div>
-      <div class="toolbar" id="tabs"></div>
-      <div class="filters" id="filters"></div>
-    </div>
+<div class="wrap">
+  <header>
+    <div class="logo">⚡ REEL HOOK BATCH</div>
+    <h1>Genera reel con testo fisheye, in automatico</h1>
+    <p class="sub">Incolla le tue frasi hook, carica sfondi (foto o video), il tool produce un video pronto per ognuna — con l'effetto testo "bulge/fisheye" bruciato dentro. Tutto gira nel tuo browser, nessun file lascia il computer.</p>
+  </header>
 
-    <div class="panelbar">
-      <div>
-        <div id="storageMode">Storage: locale</div>
-        <div class="small">GitHub Pages pronto, cloud opzionale e TMDB opzionale.</div>
-      </div>
-      <div class="meta">
-        <button class="btn btn-soft tiny" id="catalogBtn">Catalogo</button>
-        <button class="btn btn-soft tiny" id="settingsBtn2">Setup</button>
-      </div>
-    </div>
-
-    <div class="section" id="content"></div>
+  <div class="card">
+    <h2><span class="step">1</span> Le tue frasi hook</h2>
+    <p class="hint">Una frase per riga. Verrà generato un video per ogni riga (gli sfondi si alternano automaticamente se ne hai meno delle frasi).</p>
+    <textarea id="hooksInput" placeholder="Immagina odiarmi mentre io...
+Questo è il tuo segno per...
+Non me la prendo, sto solo osservando..."></textarea>
   </div>
 
-  <button class="fab" id="fab">+</button>
+  <div class="card">
+    <h2><span class="step">2</span> Sfondi (foto o video)</h2>
+    <p class="hint">Carica una o più foto/video da usare come sfondo. Le foto diventano automaticamente un breve clip con zoom lento (effetto Ken Burns).</p>
+    <label class="dropzone" id="dropzone">
+      📁 Trascina qui i file, o clicca per scegliere<br/><span style="font-size:.76rem">JPG, PNG, MP4, WEBM, MOV</span>
+      <input type="file" id="mediaInput" accept="image/*,video/*" multiple />
+    </label>
+    <div class="filelist" id="fileList"></div>
+  </div>
 
-  <dialog id="itemDialog">
-    <form class="sheet" id="itemForm" method="dialog">
-      <h3>Aggiungi o modifica</h3>
-      <div class="grid">
-        <div class="field"><label for="title">Titolo</label><input id="title" required /></div>
-        <div class="field"><label for="kind">Tipo</label><select id="kind"><option value="Film">Film</option><option value="Serie">Serie</option></select></div>
-        <div class="field"><label for="list">Categoria</label><select id="list"><option value="IlDen">IlDen</option><option value="LaLara">LaLara</option><option value="Classici">Classici</option></select></div>
-        <div class="field"><label for="group">Franchise / gruppo</label><input id="group" placeholder="Marvel MCU, X-Men, Classici..." /></div>
-        <div class="field"><label for="status">Stato</label><select id="status"><option value="seen">Visto</option><option value="progress">In corso</option><option value="planned">Da vedere</option></select></div>
-        <div class="check"><input id="together" type="checkbox" /><label for="together">Visto insieme</label></div>
-        <div class="field"><label for="poster">Locandina URL</label><input id="poster" placeholder="Automatica con TMDB o incolla URL" /></div>
-        <div class="actions2" style="margin-top:0"><button type="button" class="btn" id="tmdbBtn">Cerca locandina</button><button type="button" class="btn" id="clearPosterBtn">Togli locandina</button></div>
-        <div class="field"><label for="notes">Note</label><textarea id="notes" rows="3" placeholder="Es. siamo al terzo"></textarea></div>
+  <div class="card">
+    <h2><span class="step">3</span> Stile e opzioni</h2>
+    <div class="row">
+      <div class="field">
+        <label>Intensità fisheye</label>
+        <input type="range" id="optStrength" min="0" max="100" value="55" />
       </div>
-      <div class="actions2"><button type="button" class="btn" id="cancelBtn">Annulla</button><button type="submit" class="btn btn-primary">Salva</button></div>
-    </form>
-  </dialog>
+      <div class="field">
+        <label>Posizione testo</label>
+        <select id="optPos"><option value="center">Centro</option><option value="top">Alto</option><option value="bottom" selected>Basso</option></select>
+      </div>
+      <div class="field">
+        <label>Colore testo</label>
+        <select id="optColor"><option value="white">Bianco + bordo nero</option><option value="black">Nero + bordo bianco</option><option value="pink">Rosa acceso</option></select>
+      </div>
+      <div class="field">
+        <label>Durata clip da foto (sec)</label>
+        <select id="optDur"><option value="3">3s</option><option value="4" selected>4s</option><option value="5">5s</option><option value="6">6s</option></select>
+      </div>
+      <div class="field">
+        <label>Ordine sfondi</label>
+        <select id="optOrder"><option value="cycle">In ordine</option><option value="random">Casuale</option></select>
+      </div>
+    </div>
+  </div>
 
-  <dialog id="catalogDialog"><div class="sheet"><h3>Catalogo rapido</h3><div class="small" style="margin-bottom:12px">Aggiunte rapide ai film e serie più famosi.</div><div class="actions2" style="margin-bottom:12px"><button class="btn" id="closeCatalog">Chiudi</button><button class="btn" id="resetSeed">Ripristina seed</button></div><div class="catalog" id="catalogList"></div></div></dialog>
+  <button class="genbtn" id="genBtn">🎬 Genera tutti i reel</button>
+  <div class="progressWrap" id="progressWrap">
+    <div class="progressbar"><div id="progressFill"></div></div>
+    <div class="progressLabel" id="progressLabel">In corso...</div>
+  </div>
 
-  <dialog id="settingsDialog"><div class="sheet"><h3>Setup</h3><div class="grid"><div class="field"><label for="supaUrl">Supabase URL</label><input id="supaUrl" placeholder="https://xxxx.supabase.co" /></div><div class="field"><label for="supaKey">Supabase anon key</label><textarea id="supaKey" rows="3" placeholder="Incolla qui la anon key"></textarea></div><div class="field"><label for="tmdbToken">TMDB Bearer token</label><textarea id="tmdbToken" rows="3" placeholder="Token opzionale per locandine automatiche"></textarea></div></div><div class="actions2"><button class="btn" id="closeSettings">Chiudi</button><button class="btn btn-primary" id="saveSettings">Salva setup</button></div></div></dialog>
+  <div class="downloadAllBar" id="downloadAllBar">
+    <button class="btn2" id="downloadZipBtn">⬇ Scarica tutto (ZIP)</button>
+  </div>
+  <div class="results" id="results"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const CONFIG = { supabaseUrl:'', supabaseAnonKey:'', tmdbToken:'' };
-    const SETTINGS_KEY = 'laraden.settings.v2';
-    const LISTS = ['IlDen','LaLara','Classici'];
-    const STATUS_LABEL = { seen:'Visto', progress:'In corso', planned:'Da vedere' };
-    const STATUS_CLASS = { seen:'seen', progress:'progressing', planned:'planned' };
-    const STATUS_FILTERS = ['all','seen','progress','planned'];
-    const TMDB_IMG = 'https://image.tmdb.org/t/p/w342';
+  <footer>Elaborazione 100% locale nel browser — niente upload su server esterni. Formato esportato: WebM (importalo in CapCut/InShot per l'export finale in MP4 se ti serve per l'upload nativo).</footer>
+</div>
 
-    const seedItems = [
-      { title:'X-Men', kind:'Film', list:'IlDen', group:'X-Men', status:'seen', notes:'Visto', together:true, poster:'' },
-      { title:'X2', kind:'Film', list:'IlDen', group:'X-Men', status:'seen', notes:'Visto', together:true, poster:'' },
-      { title:'X-Men - Conflitto finale', kind:'Film', list:'IlDen', group:'X-Men', status:'progress', notes:'Siamo al terzo', together:true, poster:'' },
-      { title:'Iron Man', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'L\'incredibile Hulk', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Iron Man 2', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Thor', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Captain America - Il primo Vendicatore', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'The Avengers', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Iron Man 3', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Thor - The Dark World', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Captain America - The Winter Soldier', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Guardiani della Galassia', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Avengers - Age of Ultron', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Ant-Man', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Captain America - Civil War', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Doctor Strange', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Guardiani della Galassia Vol. 2', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Spider-Man - Homecoming', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Thor - Ragnarok', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Black Panther', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Avengers - Infinity War', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Ant-Man and the Wasp', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Captain Marvel', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'', together:true, poster:'' },
-      { title:'Avengers - Endgame', kind:'Film', list:'IlDen', group:'Marvel MCU', status:'seen', notes:'Ultimo Marvel visto finora', together:true, poster:'' },
-      { title:'Interstellar', kind:'Film', list:'Classici', group:'Classici', status:'planned', notes:'', together:false, poster:'' },
-      { title:'Il Padrino', kind:'Film', list:'Classici', group:'Classici', status:'planned', notes:'', together:false, poster:'' },
-      { title:'Breaking Bad', kind:'Serie', list:'LaLara', group:'Serie cult', status:'planned', notes:'', together:false, poster:'' },
-      { title:'Friends', kind:'Serie', list:'LaLara', group:'Serie cult', status:'planned', notes:'', together:false, poster:'' }
-    ].map((x,i)=>({id:crypto.randomUUID ? crypto.randomUUID() : String(i+1), ...x}));
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
 
-    const catalogItems = [
-      { title:'The Dark Knight', kind:'Film', list:'Classici', group:'Classici', together:false },
-      { title:'Titanic', kind:'Film', list:'Classici', group:'Classici', together:false },
-      { title:'Il Signore degli Anelli - La compagnia dell\'anello', kind:'Film', list:'Classici', group:'Saga famose', together:false },
-      { title:'Harry Potter e la pietra filosofale', kind:'Film', list:'Classici', group:'Saga famose', together:false },
-      { title:'The Office', kind:'Serie', list:'LaLara', group:'Serie cult', together:false },
-      { title:'Game of Thrones', kind:'Serie', list:'LaLara', group:'Serie cult', together:false },
-      { title:'The Sopranos', kind:'Serie', list:'LaLara', group:'Serie cult', together:false },
-      { title:'Loki', kind:'Serie', list:'IlDen', group:'Marvel Serie', together:true },
-      { title:'WandaVision', kind:'Serie', list:'IlDen', group:'Marvel Serie', together:true },
-      { title:'Deadpool', kind:'Film', list:'IlDen', group:'Marvel Fox', together:true },
-      { title:'Logan', kind:'Film', list:'IlDen', group:'X-Men', together:true },
-      { title:'Stranger Things', kind:'Serie', list:'LaLara', group:'Serie cult', together:false }
-    ];
+/* ------------------------------------------------------------------ */
+/* STATE                                                                */
+/* ------------------------------------------------------------------ */
+let mediaFiles = []; // {id, file, type:'image'|'video', url, thumb}
+let results = []; // {name, blob, url}
 
-    const $ = id => document.getElementById(id);
-    const loadSettings = () => ({...CONFIG, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'))});
-    const saveSettingsLS = (s) => localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
-    let settings = loadSettings();
-    let activeList = 'IlDen', searchTerm = '', editingId = null, items = [], remote = null, statusFilter = 'all', togetherOnly = false;
+/* ------------------------------------------------------------------ */
+/* FILE INPUT / DROPZONE                                               */
+/* ------------------------------------------------------------------ */
+const dropzone = $('#dropzone');
+const mediaInput = $('#mediaInput');
+dropzone.addEventListener('click', () => mediaInput.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.classList.remove('drag');
+  addFiles(e.dataTransfer.files);
+});
+mediaInput.addEventListener('change', e => { addFiles(e.target.files); mediaInput.value=''; });
 
-    const localDb = {
-      key:'laraden.movies.v2',
-      load(){ const raw = localStorage.getItem(this.key); if(!raw){ localStorage.setItem(this.key, JSON.stringify(seedItems)); return structuredClone(seedItems); } try { return JSON.parse(raw); } catch { return structuredClone(seedItems); } },
-      save(all){ localStorage.setItem(this.key, JSON.stringify(all)); },
-      async upsert(item){ const all = this.load(); const i = all.findIndex(x=>x.id===item.id); if(i>=0) all[i]=item; else all.unshift(item); this.save(all); },
-      async remove(id){ this.save(this.load().filter(x=>x.id!==id)); },
-      async reset(){ this.save(structuredClone(seedItems)); }
-    };
+function addFiles(fileList){
+  Array.from(fileList).forEach(file => {
+    const type = file.type.startsWith('video') ? 'video' : 'image';
+    const url = URL.createObjectURL(file);
+    mediaFiles.push({ id: Math.random().toString(36).slice(2), file, type, url });
+  });
+  renderFileList();
+}
+function renderFileList(){
+  const el = $('#fileList');
+  el.innerHTML = '';
+  mediaFiles.forEach(m => {
+    const chip = document.createElement('div');
+    chip.className = 'filechip';
+    const media = m.type === 'video' ? document.createElement('video') : document.createElement('img');
+    media.src = m.url; if(m.type==='video'){ media.muted = true; }
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = m.file.name;
+    const rm = document.createElement('button'); rm.textContent = '✕';
+    rm.onclick = () => { mediaFiles = mediaFiles.filter(x => x.id !== m.id); renderFileList(); };
+    chip.appendChild(media); chip.appendChild(nm); chip.appendChild(rm);
+    el.appendChild(chip);
+  });
+}
 
-    async function initRemote(){
-      if(!settings.supabaseUrl || !settings.supabaseAnonKey || !window.supabase) return null;
-      const client = window.supabase.createClient(settings.supabaseUrl, settings.supabaseAnonKey);
-      $('storageMode').textContent = 'Storage: cloud';
-      return {
-        async load(){
-          const { data, error } = await client.from('titles').select('*').order('created_at',{ascending:true});
-          if(error) throw error;
-          return data.map(r => ({ id:r.id, title:r.title, kind:r.kind, list:r.list_name, group:r.group_name || 'Senza gruppo', status:r.status, notes:r.notes || '', together:!!r.together, poster:r.poster || '' }));
-        },
-        async upsert(item){
-          const payload = { id:item.id, title:item.title, kind:item.kind, list_name:item.list, group_name:item.group, status:item.status, notes:item.notes, together:item.together, poster:item.poster };
-          const { error } = await client.from('titles').upsert(payload); if(error) throw error;
-        },
-        async remove(id){ const { error } = await client.from('titles').delete().eq('id', id); if(error) throw error; },
-        async reset(){ const { error:del } = await client.from('titles').delete().neq('id','00000000-0000-0000-0000-000000000000'); if(del) throw del; const payload = seedItems.map(x=>({id:x.id,title:x.title,kind:x.kind,list_name:x.list,group_name:x.group,status:x.status,notes:x.notes,together:x.together,poster:x.poster})); const { error:ins } = await client.from('titles').insert(payload); if(ins) throw ins; }
-      };
+/* ------------------------------------------------------------------ */
+/* TEXT WRAPPING + FIT                                                 */
+/* ------------------------------------------------------------------ */
+function fitAndWrapText(ctx, text, maxWidth, maxHeight, startSize){
+  let size = startSize;
+  let lines = [];
+  while(size > 18){
+    ctx.font = `900 ${size}px 'Archivo Black', 'Arial Black', Impact, sans-serif`;
+    lines = wrapLine(ctx, text, maxWidth);
+    const totalH = lines.length * size * 1.18;
+    if(totalH <= maxHeight) break;
+    size -= 4;
+  }
+  return { size, lines };
+}
+function wrapLine(ctx, text, maxWidth){
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines = []; let cur = '';
+  words.forEach(w => {
+    const test = cur ? cur + ' ' + w : w;
+    if(ctx.measureText(test).width > maxWidth && cur){ lines.push(cur); cur = w; }
+    else cur = test;
+  });
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+/* ------------------------------------------------------------------ */
+/* WEBGL BULGE/FISHEYE TEXT RENDERER                                   */
+/* Renders styled text to an offscreen 2D canvas, then distorts it     */
+/* with a radial "spherize" shader on a small WebGL canvas.            */
+/* ------------------------------------------------------------------ */
+const bulgeGL = document.createElement('canvas');
+const gl = bulgeGL.getContext('webgl', { premultipliedAlpha:true, alpha:true });
+let bulgeProg, bulgeLocPos, bulgeLocUv, bulgeLocTex, bulgeLocStrength, bulgeVbuf;
+if(gl){
+  const VS = `attribute vec2 aPos; attribute vec2 aUv; varying vec2 vUv; void main(){ vUv=aUv; gl_Position=vec4(aPos,0.0,1.0); }`;
+  const FS = `
+    precision mediump float; varying vec2 vUv; uniform sampler2D uTex; uniform float uStrength;
+    void main(){
+      vec2 c = vUv - 0.5;
+      float r = length(c) / 0.5;
+      if(r > 1.0){ gl_FragColor = vec4(0.0); return; }
+      vec2 dir = (r > 0.0005) ? normalize(c) : vec2(0.0);
+      float newR = pow(r, 1.0 + uStrength);
+      vec2 srcUv = dir * newR * 0.5 + 0.5;
+      gl_FragColor = texture2D(uTex, clamp(srcUv, 0.0, 1.0));
+    }`;
+  function compile(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; }
+  bulgeProg = gl.createProgram();
+  gl.attachShader(bulgeProg, compile(gl.VERTEX_SHADER, VS));
+  gl.attachShader(bulgeProg, compile(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(bulgeProg);
+  gl.useProgram(bulgeProg);
+  bulgeLocPos = gl.getAttribLocation(bulgeProg, 'aPos');
+  bulgeLocUv = gl.getAttribLocation(bulgeProg, 'aUv');
+  bulgeLocTex = gl.getUniformLocation(bulgeProg, 'uTex');
+  bulgeLocStrength = gl.getUniformLocation(bulgeProg, 'uStrength');
+  bulgeVbuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, bulgeVbuf);
+  // fullscreen quad: pos.xy, uv.xy
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1,-1, 0,1,   1,-1, 1,1,   1,1, 1,0,
+    -1,-1, 0,1,   1,1, 1,0,   -1,1, 0,0
+  ]), gl.STATIC_DRAW);
+}
+const bulgeTex = gl ? gl.createTexture() : null;
+
+/**
+ * Renders text with bulge/fisheye distortion into a transparent canvas.
+ * Returns a canvas element (textCanvas) ready to be drawn onto the main stage.
+ */
+const srcCanvas = document.createElement('canvas');
+const srcCtx = srcCanvas.getContext('2d');
+function renderBulgeText(text, w, h, strength01, colorMode){
+  srcCanvas.width = w; srcCanvas.height = h;
+  srcCtx.clearRect(0,0,w,h);
+  srcCtx.textAlign = 'center'; srcCtx.textBaseline = 'middle';
+  const { size, lines } = fitAndWrapText(srcCtx, text, w*0.86, h*0.86, Math.floor(h*0.22));
+  srcCtx.font = `900 ${size}px 'Archivo Black', 'Arial Black', Impact, sans-serif`;
+  const lineH = size * 1.18;
+  const totalH = lines.length * lineH;
+  let y = h/2 - totalH/2 + lineH/2;
+
+  let fill = '#ffffff', stroke = '#000000';
+  if(colorMode === 'black'){ fill = '#000000'; stroke = '#ffffff'; }
+  if(colorMode === 'pink'){ fill = '#ff3fb0'; stroke = '#1a0a20'; }
+
+  lines.forEach(line => {
+    srcCtx.lineJoin = 'round';
+    srcCtx.miterLimit = 2;
+    srcCtx.lineWidth = size * 0.16;
+    srcCtx.strokeStyle = stroke;
+    srcCtx.strokeText(line, w/2, y);
+    srcCtx.fillStyle = fill;
+    srcCtx.fillText(line, w/2, y);
+    y += lineH;
+  });
+
+  if(!gl){ return srcCanvas; } // fallback: no WebGL, return undistorted text
+
+  bulgeGL.width = w; bulgeGL.height = h;
+  gl.viewport(0,0,w,h);
+  gl.clearColor(0,0,0,0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+  gl.bindTexture(gl.TEXTURE_2D, bulgeTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, srcCanvas);
+
+  gl.useProgram(bulgeProg);
+  gl.bindBuffer(gl.ARRAY_BUFFER, bulgeVbuf);
+  gl.enableVertexAttribArray(bulgeLocPos); gl.vertexAttribPointer(bulgeLocPos,2,gl.FLOAT,false,16,0);
+  gl.enableVertexAttribArray(bulgeLocUv); gl.vertexAttribPointer(bulgeLocUv,2,gl.FLOAT,false,16,8);
+  gl.uniform1i(bulgeLocTex, 0);
+  gl.uniform1f(bulgeLocStrength, strength01);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+  return bulgeGL;
+}
+
+/* ------------------------------------------------------------------ */
+/* JOB RENDERING: composite background + bulge text -> MediaRecorder   */
+/* ------------------------------------------------------------------ */
+const STAGE_W = 720, STAGE_H = 1280;
+const stage = document.createElement('canvas');
+stage.width = STAGE_W; stage.height = STAGE_H;
+const stageCtx = stage.getContext('2d');
+
+function pickMimeType(){
+  const cands = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  for(const c of cands){ if(window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c; }
+  return 'video/webm';
+}
+
+function drawCover(ctx, media, mw, mh, dx, dy, dw, dh, zoom){
+  zoom = zoom || 1;
+  const scale = Math.max(dw/mw, dh/mh) * zoom;
+  const sw = dw/scale, sh = dh/scale;
+  const sx = (mw-sw)/2, sy = (mh-sh)/2;
+  ctx.drawImage(media, sx, sy, sw, sh, dx, dy, dw, dh);
+}
+
+async function renderJob(text, mediaItem, opts, onFrame){
+  return new Promise(async (resolve, reject) => {
+    try{
+      const strength = opts.strength;
+      const textBoxH = STAGE_H * 0.34;
+      let textY;
+      if(opts.pos==='top') textY = STAGE_H*0.06;
+      else if(opts.pos==='bottom') textY = STAGE_H - textBoxH - STAGE_H*0.09;
+      else textY = STAGE_H/2 - textBoxH/2;
+
+      const stream = stage.captureStream(30);
+      const rec = new MediaRecorder(stream, { mimeType: pickMimeType(), videoBitsPerSecond: 6_000_000 });
+      const chunks = [];
+      rec.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
+      rec.onstop = () => resolve(new Blob(chunks, { type:'video/webm' }));
+      rec.onerror = reject;
+
+      let mediaEl, naturalW, naturalH, duration;
+      if(mediaItem.type === 'image'){
+        mediaEl = new Image(); mediaEl.src = mediaItem.url;
+        await mediaEl.decode().catch(()=>{});
+        naturalW = mediaEl.naturalWidth; naturalH = mediaEl.naturalHeight;
+        duration = opts.imgDuration;
+      } else {
+        mediaEl = document.createElement('video');
+        mediaEl.src = mediaItem.url; mediaEl.muted = true; mediaEl.playsInline = true;
+        await new Promise((res, rej) => {
+          const timer = setTimeout(() => rej(new Error(`Timeout caricando: ${mediaItem.file.name}`)), 10000);
+          mediaEl.onloadedmetadata = () => { clearTimeout(timer); res(); };
+          mediaEl.onerror = () => { clearTimeout(timer); rej(new Error(`Formato video non supportato dal browser: ${mediaItem.file.name}`)); };
+        });
+        naturalW = mediaEl.videoWidth; naturalH = mediaEl.videoHeight;
+        duration = Math.min(mediaEl.duration || 6, 15);
+        await mediaEl.play().catch(()=>{});
+      }
+
+      const start = performance.now();
+      rec.start();
+
+      function frame(){
+        const now = performance.now();
+        const t = (now - start) / 1000;
+        if(t >= duration){
+          stageCtx.clearRect(0,0,STAGE_W,STAGE_H);
+          if(mediaItem.type==='image') drawCover(stageCtx, mediaEl, naturalW, naturalH, 0,0,STAGE_W,STAGE_H, 1 + 0.08);
+          else drawCover(stageCtx, mediaEl, naturalW, naturalH, 0,0,STAGE_W,STAGE_H, 1);
+          const textCanvas = renderBulgeText(text, STAGE_W, textBoxH, strength, opts.color);
+          stageCtx.drawImage(textCanvas, 0, textY, STAGE_W, textBoxH);
+          setTimeout(() => { rec.stop(); if(mediaEl.pause) mediaEl.pause(); }, 60);
+          return;
+        }
+        stageCtx.clearRect(0,0,STAGE_W,STAGE_H);
+        if(mediaItem.type === 'image'){
+          const zoom = 1 + 0.08 * (t/duration);
+          drawCover(stageCtx, mediaEl, naturalW, naturalH, 0,0,STAGE_W,STAGE_H, zoom);
+        } else {
+          drawCover(stageCtx, mediaEl, naturalW, naturalH, 0,0,STAGE_W,STAGE_H, 1);
+        }
+        // entrance pop for the text (first 0.45s)
+        const pop = Math.min(1, t/0.45);
+        const eased = 1 - Math.pow(1-pop, 3);
+        const dynStrength = strength * (0.4 + 0.6*eased);
+        const textCanvas = renderBulgeText(text, STAGE_W, textBoxH, dynStrength, opts.color);
+        stageCtx.save();
+        stageCtx.globalAlpha = eased;
+        stageCtx.drawImage(textCanvas, 0, textY, STAGE_W, textBoxH);
+        stageCtx.restore();
+
+        if(onFrame) onFrame(t/duration);
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    } catch(err){ reject(err); }
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* BATCH ORCHESTRATION                                                  */
+/* ------------------------------------------------------------------ */
+$('#genBtn').addEventListener('click', async () => {
+  const hooks = $('#hooksInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!hooks.length){ alert('Inserisci almeno una frase hook.'); return; }
+  if(!mediaFiles.length){ alert('Carica almeno uno sfondo (foto o video).'); return; }
+
+  const opts = {
+    strength: parseInt($('#optStrength').value,10)/100 * 1.4,
+    pos: $('#optPos').value,
+    color: $('#optColor').value,
+    imgDuration: parseInt($('#optDur').value,10),
+    order: $('#optOrder').value
+  };
+
+  let order = mediaFiles.slice();
+  if(opts.order === 'random'){ order = order.sort(()=>Math.random()-0.5); }
+
+  results = [];
+  $('#results').innerHTML = '';
+  $('#downloadAllBar').style.display = 'none';
+  $('#genBtn').disabled = true;
+  $('#progressWrap').style.display = 'block';
+
+  for(let i=0;i<hooks.length;i++){
+    const media = order[i % order.length];
+    $('#progressLabel').textContent = `Genero video ${i+1} di ${hooks.length}...`;
+    $('#progressFill').style.width = Math.round((i/hooks.length)*100) + '%';
+    try{
+      const blob = await renderJob(hooks[i], media, opts, (p) => {
+        const overall = (i + p) / hooks.length;
+        $('#progressFill').style.width = Math.round(overall*100) + '%';
+      });
+      const url = URL.createObjectURL(blob);
+      const name = `reel_${String(i+1).padStart(2,'0')}_${slug(hooks[i])}.webm`;
+      results.push({ name, blob, url, text: hooks[i] });
+      addResultCard(results[results.length-1]);
+    } catch(err){
+      console.error('Errore nel job', i, err);
+      addErrorCard(hooks[i], err.message || String(err));
     }
+  }
 
-    function adapter(){ return remote || localDb; }
-    async function refresh(){ items = remote ? await remote.load() : localDb.load(); render(); }
-    async function loadItems(){ remote = await initRemote().catch(()=>null); try { await refresh(); } catch { remote = null; $('storageMode').textContent = 'Storage: locale (cloud non disponibile)'; await refresh(); } }
+  $('#progressFill').style.width = '100%';
+  $('#progressLabel').textContent = `Fatto — ${results.length}/${hooks.length} video generati.`;
+  $('#genBtn').disabled = false;
+  if(results.length) $('#downloadAllBar').style.display = 'flex';
+});
 
-    function filteredItems(){
-      const q = searchTerm.trim().toLowerCase();
-      return items
-        .filter(x => x.list === activeList)
-        .filter(x => statusFilter === 'all' ? true : x.status === statusFilter)
-        .filter(x => togetherOnly ? !!x.together : true)
-        .filter(x => !q ? true : [x.title,x.group,x.notes,x.kind].join(' ').toLowerCase().includes(q));
-    }
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,30) || 'hook'; }
 
-    function grouped(arr){
-      const map = {};
-      arr.forEach(item => { const key = item.group || 'Senza gruppo'; (map[key] ||= []).push(item); });
-      return Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0],'it'));
-    }
+function addErrorCard(text, message){
+  const card = document.createElement('div');
+  card.className = 'resultCard';
+  card.style.cssText = 'align-items:center;justify-content:center;padding:16px;text-align:center;color:#ff8f9c;border-color:#5c2130;';
+  card.innerHTML = `<div style="font-size:1.4rem">⚠️</div><div class="meta" style="color:#ff8f9c">${escapeHtml(text)}</div><div class="meta" style="font-size:.7rem">${escapeHtml(message)}</div>`;
+  $('#results').appendChild(card);
+}
+function escapeHtml(s=''){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-    function escapeHtml(str=''){ return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
-    function statusCycle(s){ return s === 'planned' ? 'progress' : s === 'progress' ? 'seen' : 'planned'; }
+function addResultCard(r){
+  const card = document.createElement('div');
+  card.className = 'resultCard';
+  const video = document.createElement('video');
+  video.src = r.url; video.controls = true; video.loop = true; video.muted = true;
+  const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = r.text;
+  const dl = document.createElement('a'); dl.className='dl'; dl.href = r.url; dl.download = r.name; dl.textContent = '⬇ Scarica';
+  card.appendChild(video); card.appendChild(meta); card.appendChild(dl);
+  $('#results').appendChild(card);
+}
 
-    function renderStats(){
-      const seen = items.filter(x=>x.status==='seen').length;
-      const prog = items.filter(x=>x.status==='progress').length;
-      const plan = items.filter(x=>x.status==='planned').length;
-      const tog = items.filter(x=>x.together).length;
-      $('stats').innerHTML = `<div class="stat"><strong>${items.filter(x=>x.list===activeList).length}</strong><span>${activeList}</span></div><div class="stat"><strong>${seen}</strong><span>Visti</span></div><div class="stat"><strong>${prog}</strong><span>In corso</span></div><div class="stat"><strong>${tog}</strong><span>Insieme</span></div>`;
-    }
-
-    function renderTabs(){
-      $('tabs').innerHTML = LISTS.map(list => `<button class="tab ${list===activeList?'active':''}" data-list="${list}">${list}</button>`).join('');
-      document.querySelectorAll('[data-list]').forEach(btn => btn.onclick = ()=>{ activeList = btn.dataset.list; render(); });
-    }
-
-    function renderFilters(){
-      $('filters').innerHTML = STATUS_FILTERS.map(s => `<button class="chip ${statusFilter===s?'active':''}" data-status="${s}">${s==='all'?'Tutti':STATUS_LABEL[s]}</button>`).join('') + `<button class="chip ${togetherOnly?'active':''}" id="togFilter">Solo insieme</button>`;
-      document.querySelectorAll('[data-status]').forEach(btn => btn.onclick = ()=>{ statusFilter = btn.dataset.status; renderContent(); renderFilters(); });
-      $('togFilter').onclick = ()=>{ togetherOnly = !togetherOnly; renderContent(); renderFilters(); };
-    }
-
-    function groupProgress(entries){
-      const total = entries.length || 1;
-      const seen = entries.filter(x=>x.status==='seen').length;
-      return { seen, total, pct: Math.round((seen/total)*100) };
-    }
-
-    function posterNode(item){
-      if(item.poster) return `<img class="poster" src="${escapeHtml(item.poster)}" alt="${escapeHtml(item.title)}" loading="lazy" referrerpolicy="no-referrer" />`;
-      return `<div class="poster placeholder">🎬</div>`;
-    }
-
-    function cardTemplate(item){
-      return `<article class="card">${posterNode(item)}<div><div class="card-title">${escapeHtml(item.title)}</div><div class="meta"><span class="pill">${escapeHtml(item.kind)}</span><span class="pill ${STATUS_CLASS[item.status]}">${STATUS_LABEL[item.status]}</span>${item.together?'<span class="pill">Insieme</span>':''}</div>${item.notes?`<div class="notes">${escapeHtml(item.notes)}</div>`:''}<div class="actions" style="margin-top:10px"><button class="btn tiny" data-toggle="${item.id}">Stato</button><button class="btn tiny" data-edit="${item.id}">Modifica</button><button class="btn tiny" data-del="${item.id}">Elimina</button></div></div></article>`;
-    }
-
-    function renderContent(){
-      const groups = grouped(filteredItems());
-      if(!groups.length){ $('content').innerHTML = '<div class="group"><div class="empty">Nessun titolo. Prova a togliere i filtri o aggiungi dal catalogo.</div></div>'; return; }
-      $('content').innerHTML = groups.map(([name, entries]) => {
-        const gp = groupProgress(entries);
-        return `<section class="group"><div class="group-head"><div class="head-top"><div><h2>${escapeHtml(name)}</h2><div class="muted">${gp.seen}/${gp.total} completati · ${gp.pct}%</div></div><div class="pill">${activeList}</div></div><div class="progress"><div style="width:${gp.pct}%"></div></div></div><div class="cards">${entries.map(cardTemplate).join('')}</div></section>`;
-      }).join('');
-      document.querySelectorAll('[data-edit]').forEach(b => b.onclick = ()=>openEdit(b.dataset.edit));
-      document.querySelectorAll('[data-del]').forEach(b => b.onclick = async ()=>{ await adapter().remove(b.dataset.del); await refresh(); });
-      document.querySelectorAll('[data-toggle]').forEach(b => b.onclick = async ()=>{ const item = items.find(x=>x.id===b.dataset.toggle); if(!item) return; await adapter().upsert({...item, status:statusCycle(item.status)}); await refresh(); });
-    }
-
-    function renderCatalog(){
-      $('catalogList').innerHTML = catalogItems.map((item, i) => `<div class="suggestion"><div><div class="card-title">${escapeHtml(item.title)}</div><div class="muted">${item.kind} · ${item.list} · ${item.group}</div></div><button class="btn tiny" data-pick="${i}">Aggiungi</button></div>`).join('');
-      document.querySelectorAll('[data-pick]').forEach(btn => btn.onclick = async ()=>{ const c = catalogItems[Number(btn.dataset.pick)]; const payload = { id:crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title:c.title, kind:c.kind, list:c.list, group:c.group, status:'planned', notes:'', together:!!c.together, poster:'' }; await adapter().upsert(payload); await refresh(); });
-    }
-
-    function render(){ renderStats(); renderTabs(); renderFilters(); renderContent(); renderCatalog(); }
-
-    function openNew(prefill={}){
-      editingId = prefill.id || null;
-      $('title').value = prefill.title || '';
-      $('kind').value = prefill.kind || 'Film';
-      $('list').value = prefill.list || activeList;
-      $('group').value = prefill.group || '';
-      $('status').value = prefill.status || 'planned';
-      $('notes').value = prefill.notes || '';
-      $('together').checked = !!prefill.together;
-      $('poster').value = prefill.poster || '';
-      $('itemDialog').showModal();
-    }
-
-    function openEdit(id){ const item = items.find(x=>x.id===id); if(item) openNew(item); }
-
-    async function findPosterForTitle(title, kind){
-      settings = loadSettings();
-      if(!settings.tmdbToken) { alert('Inserisci prima il TMDB Bearer token in Setup'); return ''; }
-      const type = kind === 'Serie' ? 'tv' : 'movie';
-      const url = `https://api.themoviedb.org/3/search/${type}?query=${encodeURIComponent(title)}&language=it-IT&page=1`;
-      const res = await fetch(url, { headers:{ Authorization:`Bearer ${settings.tmdbToken}`, accept:'application/json' } });
-      if(!res.ok) throw new Error('TMDB non disponibile');
-      const data = await res.json();
-      const hit = (data.results || []).find(x => x.poster_path) || (data.results || [])[0];
-      return hit && hit.poster_path ? TMDB_IMG + hit.poster_path : '';
-    }
-
-    $('searchInput').addEventListener('input', e => { searchTerm = e.target.value; renderContent(); });
-    $('addBtn').onclick = () => openNew();
-    $('fab').onclick = () => openNew();
-    $('cancelBtn').onclick = () => $('itemDialog').close();
-    $('catalogBtn').onclick = () => $('catalogDialog').showModal();
-    $('closeCatalog').onclick = () => $('catalogDialog').close();
-    $('settingsBtn').onclick = () => $('settingsDialog').showModal();
-    $('settingsBtn2').onclick = () => $('settingsDialog').showModal();
-    $('closeSettings').onclick = () => $('settingsDialog').close();
-
-    $('tmdbBtn').onclick = async () => {
-      const title = $('title').value.trim();
-      if(!title) return alert('Scrivi prima il titolo');
-      const btn = $('tmdbBtn'); const old = btn.textContent; btn.textContent = 'Cerco...'; btn.disabled = true;
-      try { const poster = await findPosterForTitle(title, $('kind').value); if(poster) $('poster').value = poster; else alert('Locandina non trovata'); }
-      catch(e){ alert('Errore TMDB'); }
-      finally { btn.textContent = old; btn.disabled = false; }
-    };
-
-    $('clearPosterBtn').onclick = () => $('poster').value = '';
-
-    $('saveSettings').onclick = async () => {
-      settings = { supabaseUrl:$('supaUrl').value.trim(), supabaseAnonKey:$('supaKey').value.trim(), tmdbToken:$('tmdbToken').value.trim() };
-      saveSettingsLS(settings);
-      $('settingsDialog').close();
-      remote = await initRemote().catch(()=>null);
-      await refresh();
-    };
-
-    $('resetSeed').onclick = async () => { await adapter().reset(); await refresh(); };
-
-    $('itemForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const payload = {
-        id: editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
-        title: $('title').value.trim(),
-        kind: $('kind').value,
-        list: $('list').value,
-        group: $('group').value.trim() || 'Senza gruppo',
-        status: $('status').value,
-        notes: $('notes').value.trim(),
-        together: $('together').checked,
-        poster: $('poster').value.trim()
-      };
-      if(!payload.title) return;
-      await adapter().upsert(payload);
-      $('itemDialog').close();
-      await refresh();
-    });
-
-    function preloadSettings(){
-      settings = loadSettings();
-      $('supaUrl').value = settings.supabaseUrl || '';
-      $('supaKey').value = settings.supabaseAnonKey || '';
-      $('tmdbToken').value = settings.tmdbToken || '';
-    }
-
-    preloadSettings();
-    loadItems();
-  </script>
+$('#downloadZipBtn').addEventListener('click', async () => {
+  if(!window.JSZip){ alert('JSZip non disponibile (serve connessione internet la prima volta). Scarica i video singolarmente con i pulsanti sotto ogni anteprima.'); return; }
+  const btn = $('#downloadZipBtn'); const old = btn.textContent; btn.textContent = 'Preparo lo ZIP...'; btn.disabled = true;
+  try{
+    const zip = new JSZip();
+    results.forEach(r => zip.file(r.name, r.blob));
+    const content = await zip.generateAsync({ type:'blob' });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a'); a.href = url; a.download = 'reel-hook-batch.zip'; a.click();
+  } finally { btn.textContent = old; btn.disabled = false; }
+});
+})();
+</script>
 </body>
 </html>
