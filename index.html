@@ -129,7 +129,7 @@ Non me la prendo, sto solo osservando..."></textarea>
   </div>
   <div class="results" id="results"></div>
 
-  <footer>Elaborazione 100% locale nel browser — niente upload su server esterni. Formato esportato: WebM (importalo in CapCut/InShot per l'export finale in MP4 se ti serve per l'upload nativo).</footer>
+  <footer>Elaborazione 100% locale nel browser — niente upload su server esterni. Esporta in MP4 quando il tuo browser lo supporta (Chrome/Edge/Safari recenti), altrimenti in WebM come alternativa (importabile comunque in CapCut/InShot).</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -285,9 +285,57 @@ stage.width = STAGE_W; stage.height = STAGE_H;
 const stageCtx = stage.getContext('2d');
 
 function pickMimeType(){
-  const cands = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
-  for(const c of cands){ if(window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c; }
+  // Prefer native MP4, but ONLY when the browser confirms actual H.264 support
+  // via an explicit codec string. Querying the bare 'video/mp4' container type
+  // is unreliable: some browsers report it as supported but then silently
+  // encode VP9 inside the mp4 box instead of H.264 — a file that LOOKS like
+  // mp4 but plenty of phones/apps (iOS, IG/TikTok upload) will reject. An
+  // explicit avc1 codec string is the only query that can't lie this way.
+  const h264Cands = [
+    'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+    'video/mp4;codecs="avc1.4d002a"',
+    'video/mp4;codecs=avc1,mp4a',
+  ];
+  for(const c of h264Cands){ if(window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c; }
+  const webmCands = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  for(const c of webmCands){ if(window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c; }
   return 'video/webm';
+}
+function extFor(mimeType){ return mimeType.startsWith('video/mp4') ? 'mp4' : 'webm'; }
+
+/**
+ * Belt-and-suspenders check: walk the actual ISO-BMFF boxes of a recorded
+ * mp4 blob and read the real sample-entry fourcc (e.g. 'avc1' = H.264,
+ * 'vp09' = VP9). isTypeSupported() can claim H.264 support and still hand
+ * back a VP9-in-mp4 file in some browsers — this reads the real bytes
+ * instead of trusting the browser's claim.
+ */
+async function detectMp4VideoFourcc(blob){
+  try{
+    const buf = await blob.arrayBuffer();
+    const dv = new DataView(buf);
+    function findBox(start, end, type){
+      let off = start;
+      while(off + 8 <= end){
+        const size = dv.getUint32(off);
+        const boxType = String.fromCharCode(dv.getUint8(off+4),dv.getUint8(off+5),dv.getUint8(off+6),dv.getUint8(off+7));
+        const boxSize = size === 0 ? end - off : size;
+        if(boxSize < 8) break;
+        if(boxType === type) return { start: off, end: off + boxSize };
+        off += boxSize;
+      }
+      return null;
+    }
+    const moov = findBox(0, buf.byteLength, 'moov'); if(!moov) return null;
+    const trak = findBox(moov.start+8, moov.end, 'trak'); if(!trak) return null;
+    const mdia = findBox(trak.start+8, trak.end, 'mdia'); if(!mdia) return null;
+    const minf = findBox(mdia.start+8, mdia.end, 'minf'); if(!minf) return null;
+    const stbl = findBox(minf.start+8, minf.end, 'stbl'); if(!stbl) return null;
+    const stsd = findBox(stbl.start+8, stbl.end, 'stsd'); if(!stsd) return null;
+    const entryOff = stsd.start + 8 + 4 + 4; // box header + version/flags + entry_count
+    if(entryOff + 8 > buf.byteLength) return null;
+    return String.fromCharCode(dv.getUint8(entryOff+4), dv.getUint8(entryOff+5), dv.getUint8(entryOff+6), dv.getUint8(entryOff+7));
+  } catch(e){ return null; }
 }
 
 function drawCover(ctx, media, mw, mh, dx, dy, dw, dh, zoom){
@@ -309,10 +357,22 @@ async function renderJob(text, mediaItem, opts, onFrame){
       else textY = STAGE_H/2 - textBoxH/2;
 
       const stream = stage.captureStream(30);
-      const rec = new MediaRecorder(stream, { mimeType: pickMimeType(), videoBitsPerSecond: 6_000_000 });
+      const chosenType = pickMimeType();
+      const rec = new MediaRecorder(stream, { mimeType: chosenType, videoBitsPerSecond: 6_000_000 });
       const chunks = [];
       rec.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
-      rec.onstop = () => resolve(new Blob(chunks, { type:'video/webm' }));
+      rec.onstop = async () => {
+        const blob = new Blob(chunks, { type: chosenType });
+        let mimeType = chosenType;
+        if(chosenType.startsWith('video/mp4')){
+          const fourcc = await detectMp4VideoFourcc(blob);
+          if(fourcc && fourcc !== 'avc1' && fourcc !== 'avc3'){
+            console.warn(`Richiesto H.264 ma il browser ha prodotto '${fourcc}' dentro l'mp4 — ricontrassegno come webm per onestà sul contenuto reale.`);
+            mimeType = 'video/webm'; // real codec doesn't match what we asked for; don't lie about the extension
+          }
+        }
+        resolve({ blob, mimeType });
+      };
       rec.onerror = reject;
 
       let mediaEl, naturalW, naturalH, duration;
@@ -404,12 +464,12 @@ $('#genBtn').addEventListener('click', async () => {
     $('#progressLabel').textContent = `Genero video ${i+1} di ${hooks.length}...`;
     $('#progressFill').style.width = Math.round((i/hooks.length)*100) + '%';
     try{
-      const blob = await renderJob(hooks[i], media, opts, (p) => {
+      const { blob, mimeType } = await renderJob(hooks[i], media, opts, (p) => {
         const overall = (i + p) / hooks.length;
         $('#progressFill').style.width = Math.round(overall*100) + '%';
       });
       const url = URL.createObjectURL(blob);
-      const name = `reel_${String(i+1).padStart(2,'0')}_${slug(hooks[i])}.webm`;
+      const name = `reel_${String(i+1).padStart(2,'0')}_${slug(hooks[i])}.${extFor(mimeType)}`;
       results.push({ name, blob, url, text: hooks[i] });
       addResultCard(results[results.length-1]);
     } catch(err){
