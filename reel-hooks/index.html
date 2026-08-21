@@ -7,7 +7,7 @@
 <title>Reel Hook Batch</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0a0510; --panel:#150c22; --panel2:#1b1130; --line:#2c1f47; --text:#f5f1ff; --muted:#a294c2;
@@ -70,8 +70,8 @@
 <div class="wrap">
   <header>
     <div class="logo">⚡ REEL HOOK BATCH</div>
-    <h1>Genera reel con testo fisheye, in automatico</h1>
-    <p class="sub">Incolla le tue frasi hook, carica sfondi (foto o video), il tool produce un video pronto per ognuna — con l'effetto testo "bulge/fisheye" bruciato dentro. Tutto gira nel tuo browser, nessun file lascia il computer.</p>
+    <h1>Genera reel con testo ad arco, in automatico</h1>
+    <p class="sub">Incolla le tue frasi hook, carica sfondi (foto o video), il tool produce un video pronto per ognuna — con il testo curvato a "sorriso" riga per riga, come nel trend virale. Tutto gira nel tuo browser, nessun file lascia il computer.</p>
   </header>
 
   <div class="card">
@@ -96,7 +96,7 @@ Non me la prendo, sto solo osservando..."></textarea>
     <h2><span class="step">3</span> Stile e opzioni</h2>
     <div class="row">
       <div class="field">
-        <label>Intensità fisheye</label>
+        <label>Intensità curvatura</label>
         <input type="range" id="optStrength" min="0" max="100" value="55" />
       </div>
       <div class="field">
@@ -105,7 +105,7 @@ Non me la prendo, sto solo osservando..."></textarea>
       </div>
       <div class="field">
         <label>Colore testo</label>
-        <select id="optColor"><option value="white">Bianco + bordo nero</option><option value="black">Nero + bordo bianco</option><option value="pink">Rosa acceso</option></select>
+        <select id="optColor"><option value="yellow" selected>Giallo + bordo nero</option><option value="white">Bianco + bordo nero</option><option value="black">Nero + bordo bianco</option><option value="pink">Rosa acceso</option></select>
       </div>
       <div class="field">
         <label>Durata clip da foto (sec)</label>
@@ -189,7 +189,7 @@ function fitAndWrapText(ctx, text, maxWidth, maxHeight, startSize){
   let size = startSize;
   let lines = [];
   while(size > 18){
-    ctx.font = `900 ${size}px 'Archivo Black', 'Arial Black', Impact, sans-serif`;
+    ctx.font = `800 ${size}px 'Baloo 2', 'Arial Rounded MT Bold', sans-serif`;
     lines = wrapLine(ctx, text, maxWidth);
     const totalH = lines.length * size * 1.18;
     if(totalH <= maxHeight) break;
@@ -210,112 +210,70 @@ function wrapLine(ctx, text, maxWidth){
 }
 
 /* ------------------------------------------------------------------ */
-/* WEBGL BULGE/FISHEYE TEXT RENDERER                                   */
-/* Renders styled text to an offscreen 2D canvas, then distorts it     */
-/* with a radial "spherize" shader on a small WebGL canvas.            */
+/* ARC/BULGE TEXT RENDERER                                             */
+/* Matches the real trend: each line is bent along a circular arc      */
+/* (text wrapped on a globe), with every letter individually rotated   */
+/* to stay tangent to the curve — a geometric warp, not a pixel-space  */
+/* lens distortion (which is what made it look melted before).        */
 /* ------------------------------------------------------------------ */
-const bulgeGL = document.createElement('canvas');
-const gl = bulgeGL.getContext('webgl', { premultipliedAlpha:true, alpha:true });
-let bulgeProg, bulgeLocPos, bulgeLocUv, bulgeLocTex, bulgeLocStrength, bulgeLocAspect, bulgeVbuf;
-if(gl){
-  const VS = `attribute vec2 aPos; attribute vec2 aUv; varying vec2 vUv; void main(){ vUv=aUv; gl_Position=vec4(aPos,0.0,1.0); }`;
-  // Aspect-correct "spherize" bulge: the lens is a true circle inscribed in the
-  // box height, distortion strength fades to zero at its edge, and anything
-  // outside the lens is left completely undistorted (never discarded/clipped) —
-  // so wide multi-word lines never lose their outer letters.
-  const FS = `
-    precision mediump float; varying vec2 vUv; uniform sampler2D uTex; uniform float uStrength; uniform float uAspect;
-    void main(){
-      vec2 c = vUv - 0.5;
-      c.x *= uAspect;
-      float r = length(c) / 0.5;
-      vec2 srcC = c;
-      if(r < 1.0){
-        float newR = pow(r, 1.0 + uStrength);
-        vec2 dir = (r > 0.0005) ? normalize(c) : vec2(0.0);
-        srcC = dir * newR * 0.5;
-      }
-      vec2 srcUv = vec2(srcC.x / uAspect, srcC.y) + 0.5;
-      gl_FragColor = texture2D(uTex, clamp(srcUv, 0.0, 1.0));
-    }`;
-  function compile(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; }
-  bulgeProg = gl.createProgram();
-  gl.attachShader(bulgeProg, compile(gl.VERTEX_SHADER, VS));
-  gl.attachShader(bulgeProg, compile(gl.FRAGMENT_SHADER, FS));
-  gl.linkProgram(bulgeProg);
-  gl.useProgram(bulgeProg);
-  bulgeLocPos = gl.getAttribLocation(bulgeProg, 'aPos');
-  bulgeLocUv = gl.getAttribLocation(bulgeProg, 'aUv');
-  bulgeLocTex = gl.getUniformLocation(bulgeProg, 'uTex');
-  bulgeLocStrength = gl.getUniformLocation(bulgeProg, 'uStrength');
-  bulgeLocAspect = gl.getUniformLocation(bulgeProg, 'uAspect');
-  bulgeVbuf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, bulgeVbuf);
-  // fullscreen quad: pos.xy, uv.xy
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-    -1,-1, 0,1,   1,-1, 1,1,   1,1, 1,0,
-    -1,-1, 0,1,   1,1, 1,0,   -1,1, 0,0
-  ]), gl.STATIC_DRAW);
-}
-const bulgeTex = gl ? gl.createTexture() : null;
-
-/**
- * Renders text with bulge/fisheye distortion into a transparent canvas.
- * Returns a canvas element (textCanvas) ready to be drawn onto the main stage.
- */
 const srcCanvas = document.createElement('canvas');
 const srcCtx = srcCanvas.getContext('2d');
+
+function drawArcLine(ctx, line, centerX, baselineY, radius, fill, stroke, strokeWidth){
+  const chars = Array.from(line);
+  const widths = chars.map(c => ctx.measureText(c).width);
+  const totalW = widths.reduce((a,b) => a+b, 0);
+  let cursor = -totalW/2; // running x-offset from the line's own center
+  ctx.lineJoin = 'round';
+  ctx.miterLimit = 2;
+  ctx.lineWidth = strokeWidth;
+  ctx.strokeStyle = stroke;
+  ctx.fillStyle = fill;
+  chars.forEach((ch, i) => {
+    const cw = widths[i];
+    const mid = cursor + cw/2; // this glyph's center offset from line center
+    const angle = mid / radius;
+    const x = centerX + Math.sin(angle) * radius;
+    const y = baselineY + (1 - Math.cos(angle)) * radius;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.strokeText(ch, 0, 0);
+    ctx.fillText(ch, 0, 0);
+    ctx.restore();
+    cursor += cw;
+  });
+}
+
+/**
+ * Renders the hook text, each line curved along an arc, into a transparent
+ * canvas. Returns a canvas element ready to be drawn onto the main stage.
+ */
 function renderBulgeText(text, w, h, strength01, colorMode){
   srcCanvas.width = w; srcCanvas.height = h;
   srcCtx.clearRect(0,0,w,h);
   srcCtx.textAlign = 'center'; srcCtx.textBaseline = 'middle';
   const { size, lines } = fitAndWrapText(srcCtx, text, w*0.86, h*0.86, Math.floor(h*0.22));
-  srcCtx.font = `900 ${size}px 'Archivo Black', 'Arial Black', Impact, sans-serif`;
-  const lineH = size * 1.18;
+  srcCtx.font = `800 ${size}px 'Baloo 2', 'Arial Rounded MT Bold', sans-serif`;
+  const lineH = size * 1.22;
   const totalH = lines.length * lineH;
   let y = h/2 - totalH/2 + lineH/2;
 
-  let fill = '#ffffff', stroke = '#000000';
+  let fill = '#ffd23f', stroke = '#000000'; // yellow + black: the actual trend look
+  if(colorMode === 'white'){ fill = '#ffffff'; stroke = '#000000'; }
   if(colorMode === 'black'){ fill = '#000000'; stroke = '#ffffff'; }
   if(colorMode === 'pink'){ fill = '#ff3fb0'; stroke = '#1a0a20'; }
 
+  // Smaller radius = more pronounced curve. strength01 is ~0..1.4 from the slider.
+  const radius = (w * 1.7) / (0.35 + strength01);
+  const strokeWidth = size * 0.17;
+
   lines.forEach(line => {
-    srcCtx.lineJoin = 'round';
-    srcCtx.miterLimit = 2;
-    srcCtx.lineWidth = size * 0.16;
-    srcCtx.strokeStyle = stroke;
-    srcCtx.strokeText(line, w/2, y);
-    srcCtx.fillStyle = fill;
-    srcCtx.fillText(line, w/2, y);
+    drawArcLine(srcCtx, line, w/2, y, radius, fill, stroke, strokeWidth);
     y += lineH;
   });
 
-  if(!gl){ return srcCanvas; } // fallback: no WebGL, return undistorted text
-
-  bulgeGL.width = w; bulgeGL.height = h;
-  gl.viewport(0,0,w,h);
-  gl.clearColor(0,0,0,0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-
-  gl.bindTexture(gl.TEXTURE_2D, bulgeTex);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, srcCanvas);
-
-  gl.useProgram(bulgeProg);
-  gl.bindBuffer(gl.ARRAY_BUFFER, bulgeVbuf);
-  gl.enableVertexAttribArray(bulgeLocPos); gl.vertexAttribPointer(bulgeLocPos,2,gl.FLOAT,false,16,0);
-  gl.enableVertexAttribArray(bulgeLocUv); gl.vertexAttribPointer(bulgeLocUv,2,gl.FLOAT,false,16,8);
-  gl.uniform1i(bulgeLocTex, 0);
-  gl.uniform1f(bulgeLocStrength, strength01);
-  gl.uniform1f(bulgeLocAspect, w / h);
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-  return bulgeGL;
+  return srcCanvas;
 }
 
 /* ------------------------------------------------------------------ */
