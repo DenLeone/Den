@@ -376,6 +376,29 @@ async function renderJob(text, mediaItem, opts, onFrame){
       else if(opts.pos==='bottom') textY = STAGE_H - textBoxH - STAGE_H*0.09;
       else textY = STAGE_H/2 - textBoxH/2;
 
+      // The arc-text render (measureText/fillText/strokeText per glyph) is the
+      // single most expensive thing per frame. Its look only depends on
+      // (text, style, curve strength) — none of which change once the brief
+      // pop-in entrance finishes — so cache the rendered bitmap and only pay
+      // for a fresh render when that key actually changes, instead of redoing
+      // full per-glyph layout ~30 times a second for the whole clip.
+      let cachedKey = null, cachedCanvas = null;
+      function getTextCanvas(strengthNow){
+        const key = text + '|' + opts.color + '|' + strengthNow.toFixed(3);
+        if(key !== cachedKey){
+          cachedCanvas = renderBulgeText(text, STAGE_W, textBoxH, strengthNow, opts.color);
+          // renderBulgeText draws into a shared reusable canvas (srcCanvas), so
+          // snapshot it to a dedicated canvas before it gets overwritten by the
+          // next call (e.g. the next job, or the final landing-frame render).
+          const snap = document.createElement('canvas');
+          snap.width = cachedCanvas.width; snap.height = cachedCanvas.height;
+          snap.getContext('2d').drawImage(cachedCanvas, 0, 0);
+          cachedCanvas = snap;
+          cachedKey = key;
+        }
+        return cachedCanvas;
+      }
+
       const stream = stage.captureStream(30);
       const chosenType = pickMimeType();
       const rec = new MediaRecorder(stream, { mimeType: chosenType, videoBitsPerSecond: 6_000_000 });
@@ -424,7 +447,7 @@ async function renderJob(text, mediaItem, opts, onFrame){
           stageCtx.clearRect(0,0,STAGE_W,STAGE_H);
           if(mediaItem.type==='image') drawCover(stageCtx, mediaEl, naturalW, naturalH, 0,0,STAGE_W,STAGE_H, 1 + 0.08);
           else drawCover(stageCtx, mediaEl, naturalW, naturalH, 0,0,STAGE_W,STAGE_H, 1);
-          const textCanvas = renderBulgeText(text, STAGE_W, textBoxH, strength, opts.color);
+          const textCanvas = getTextCanvas(strength);
           stageCtx.drawImage(textCanvas, 0, textY, STAGE_W, textBoxH);
           setTimeout(() => { rec.stop(); if(mediaEl.pause) mediaEl.pause(); }, 60);
           return;
@@ -440,7 +463,7 @@ async function renderJob(text, mediaItem, opts, onFrame){
         const pop = Math.min(1, t/0.45);
         const eased = 1 - Math.pow(1-pop, 3);
         const dynStrength = strength * (0.4 + 0.6*eased);
-        const textCanvas = renderBulgeText(text, STAGE_W, textBoxH, dynStrength, opts.color);
+        const textCanvas = getTextCanvas(dynStrength);
         stageCtx.save();
         stageCtx.globalAlpha = eased;
         stageCtx.drawImage(textCanvas, 0, textY, STAGE_W, textBoxH);
