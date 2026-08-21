@@ -216,18 +216,26 @@ function wrapLine(ctx, text, maxWidth){
 /* ------------------------------------------------------------------ */
 const bulgeGL = document.createElement('canvas');
 const gl = bulgeGL.getContext('webgl', { premultipliedAlpha:true, alpha:true });
-let bulgeProg, bulgeLocPos, bulgeLocUv, bulgeLocTex, bulgeLocStrength, bulgeVbuf;
+let bulgeProg, bulgeLocPos, bulgeLocUv, bulgeLocTex, bulgeLocStrength, bulgeLocAspect, bulgeVbuf;
 if(gl){
   const VS = `attribute vec2 aPos; attribute vec2 aUv; varying vec2 vUv; void main(){ vUv=aUv; gl_Position=vec4(aPos,0.0,1.0); }`;
+  // Aspect-correct "spherize" bulge: the lens is a true circle inscribed in the
+  // box height, distortion strength fades to zero at its edge, and anything
+  // outside the lens is left completely undistorted (never discarded/clipped) —
+  // so wide multi-word lines never lose their outer letters.
   const FS = `
-    precision mediump float; varying vec2 vUv; uniform sampler2D uTex; uniform float uStrength;
+    precision mediump float; varying vec2 vUv; uniform sampler2D uTex; uniform float uStrength; uniform float uAspect;
     void main(){
       vec2 c = vUv - 0.5;
+      c.x *= uAspect;
       float r = length(c) / 0.5;
-      if(r > 1.0){ gl_FragColor = vec4(0.0); return; }
-      vec2 dir = (r > 0.0005) ? normalize(c) : vec2(0.0);
-      float newR = pow(r, 1.0 + uStrength);
-      vec2 srcUv = dir * newR * 0.5 + 0.5;
+      vec2 srcC = c;
+      if(r < 1.0){
+        float newR = pow(r, 1.0 + uStrength);
+        vec2 dir = (r > 0.0005) ? normalize(c) : vec2(0.0);
+        srcC = dir * newR * 0.5;
+      }
+      vec2 srcUv = vec2(srcC.x / uAspect, srcC.y) + 0.5;
       gl_FragColor = texture2D(uTex, clamp(srcUv, 0.0, 1.0));
     }`;
   function compile(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; }
@@ -240,6 +248,7 @@ if(gl){
   bulgeLocUv = gl.getAttribLocation(bulgeProg, 'aUv');
   bulgeLocTex = gl.getUniformLocation(bulgeProg, 'uTex');
   bulgeLocStrength = gl.getUniformLocation(bulgeProg, 'uStrength');
+  bulgeLocAspect = gl.getUniformLocation(bulgeProg, 'uAspect');
   bulgeVbuf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, bulgeVbuf);
   // fullscreen quad: pos.xy, uv.xy
@@ -303,6 +312,7 @@ function renderBulgeText(text, w, h, strength01, colorMode){
   gl.enableVertexAttribArray(bulgeLocUv); gl.vertexAttribPointer(bulgeLocUv,2,gl.FLOAT,false,16,8);
   gl.uniform1i(bulgeLocTex, 0);
   gl.uniform1f(bulgeLocStrength, strength01);
+  gl.uniform1f(bulgeLocAspect, w / h);
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 
   return bulgeGL;
