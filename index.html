@@ -122,6 +122,10 @@ Non me la prendo, sto solo osservando..."></textarea>
         <select id="optOrder"><option value="cycle">In ordine</option><option value="random">Casuale</option></select>
       </div>
     </div>
+    <div class="field" style="margin-top:12px">
+      <label>Hashtag per le didascalie (max 5, dal 2026 Instagram taglia oltre — scrivili pertinenti al contenuto, non #fyp/#viral)</label>
+      <input type="text" id="optHashtags" placeholder="#tuoargomento #nicchia #altrotag #ancora1 #ancora2" />
+    </div>
   </div>
 
   <button class="genbtn" id="genBtn">🎬 Genera tutti i reel</button>
@@ -132,6 +136,7 @@ Non me la prendo, sto solo osservando..."></textarea>
 
   <div class="downloadAllBar" id="downloadAllBar">
     <button class="btn2" id="downloadZipBtn">⬇ Scarica tutto (ZIP)</button>
+    <button class="btn2" id="downloadCaptionsBtn">📋 Pacchetto didascalie (per il posting)</button>
   </div>
   <div class="results" id="results"></div>
 
@@ -559,6 +564,37 @@ $('#downloadZipBtn').addEventListener('click', async () => {
     const url = URL.createObjectURL(content);
     const a = document.createElement('a'); a.href = url; a.download = 'reel-hook-batch.zip'; a.click();
   } finally { btn.textContent = old; btn.disabled = false; }
+});
+
+function csvEscape(s){ return '"' + String(s).replace(/"/g,'""') + '"'; }
+
+$('#downloadCaptionsBtn').addEventListener('click', () => {
+  if(!results.length) return;
+  const hashtags = $('#optHashtags').value.trim();
+  const tagCount = (hashtags.match(/#\S+/g) || []).length;
+  if(tagCount > 5) alert(`Attenzione: hai scritto ${tagCount} hashtag — Instagram dal 2026 ne taglia oltre 5. Le didascalie li includono comunque tutti, valuta di accorciare a 5.`);
+
+  // Human-readable version: easy to eyeball and copy-paste one at a time.
+  const txtParts = results.map(r => {
+    const caption = hashtags ? `${r.text}\n\n${hashtags}` : r.text;
+    return `${r.name}\n${caption}`;
+  });
+  const txtBlob = new Blob([txtParts.join('\n\n---\n\n')], { type:'text/plain' });
+  const txtUrl = URL.createObjectURL(txtBlob);
+  const a1 = document.createElement('a'); a1.href = txtUrl; a1.download = 'didascalie.txt'; a1.click();
+
+  // CSV version: two generic columns (file, caption) — most bulk schedulers
+  // (Metricool, Publer...) let you map columns to their own template on
+  // import, so paste/adapt this into whichever tool's official CSV format.
+  const csvRows = [['file','caption']];
+  results.forEach(r => {
+    const caption = hashtags ? `${r.text}\n\n${hashtags}` : r.text;
+    csvRows.push([r.name, caption]);
+  });
+  const csvContent = csvRows.map(row => row.map(csvEscape).join(',')).join('\r\n');
+  const csvBlob = new Blob([csvContent], { type:'text/csv' });
+  const csvUrl = URL.createObjectURL(csvBlob);
+  const a2 = document.createElement('a'); a2.href = csvUrl; a2.download = 'didascalie.csv'; a2.click();
 });
 })();
 </script>
