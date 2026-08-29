@@ -3,141 +3,208 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b0b12" />
+  <meta name="theme-color" content="#07070b" />
   <title>Lara &amp; Den · Movie Log</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#08080d;--bg2:#0c0e17;--panel:#141622;--panel2:#191c2a;--line:#282d40;--text:#f3f5fa;--muted:#9fa7bf;
-      --red:#e4262f;--red2:#ff5e57;--gold:#f2bf4b;--ok:#31c48d;--warn:#ffb454;--blue:#6aa7ff;--radius:22px;
-      --shadow:0 18px 40px rgba(0,0,0,.35);--max:920px;
+      --bg:#07070b;--bg2:#0b0c14;--panel:#12131d;--panel2:#171927;--line:#242739;--line-soft:#1c1e2c;
+      --text:#f5f6fb;--muted:#8d94ac;--muted2:#666c85;
+      --red:#e4262f;--red2:#ff5e57;--gold:#f2bf4b;--gold2:#ffd980;--ok:#31c48d;--warn:#ffb454;--blue:#6aa7ff;
+      --shadow:0 16px 34px rgba(0,0,0,.4);--shadow-sm:0 6px 16px rgba(0,0,0,.3);--max:520px;
+      --navh:64px;
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);color:var(--text);font-family:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    body{padding:0 0 calc(88px + env(safe-area-inset-bottom))}
-    button,input,select,textarea{font:inherit}
-    .app{max-width:var(--max);margin:0 auto;padding:14px 14px 32px}
-    .hero{position:sticky;top:0;z-index:30;padding:10px 0 14px;background:linear-gradient(180deg,rgba(8,8,13,.98),rgba(8,8,13,.85) 72%,rgba(8,8,13,0));backdrop-filter:blur(10px)}
-    .brand{display:flex;gap:12px;align-items:center;padding:12px;border-radius:26px;background:rgba(20,22,34,.88);border:1px solid rgba(255,255,255,.06);box-shadow:var(--shadow)}
-    .logo{width:56px;height:40px;flex:0 0 auto}
-    .brand h1{margin:0;font-size:1.25rem;line-height:1.05;font-weight:800;letter-spacing:-.01em}
-    .brand p{margin:4px 0 0;color:var(--muted);font-size:.82rem}
-    .row{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-top:12px}
-    .search,.mini{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);padding:12px 14px;border-radius:18px}
-    .search input{width:100%;border:0;outline:0;background:none;color:var(--text);font-size:1rem}
-    .btn,.chip,.tab{border:0;cursor:pointer}
-    .btn{min-height:46px;padding:12px 14px;border-radius:18px;background:var(--panel);color:var(--text);border:1px solid var(--line);font-weight:600}
-    .btn-primary{background:linear-gradient(135deg,var(--red),var(--red2));border:0;font-weight:700;color:#fff}
-    .btn-soft{background:var(--panel2)}
-    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}
-    .stat{padding:12px 8px;border-radius:18px;background:var(--panel);border:1px solid var(--line);text-align:center}
-    .stat strong{display:block;font-size:1.15rem;font-weight:800}.stat span{font-size:.72rem;color:var(--muted)}
-    .toolbar,.filters{display:flex;gap:10px;overflow:auto;padding-bottom:4px;scrollbar-width:none}.toolbar::-webkit-scrollbar,.filters::-webkit-scrollbar{display:none}
-    .tab,.chip{white-space:nowrap;padding:11px 14px;border-radius:999px;background:#1c2031;color:var(--muted);border:1px solid transparent;font-weight:600}
-    .tab.active,.chip.active{color:var(--text);background:linear-gradient(180deg,#252a3f,#181c2a);border-color:#3b4463}
-    .filters{margin-top:10px;align-items:center}
-    .sortSelect{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:10px 12px;font-size:.82rem;font-weight:600}
-    .panelbar{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:14px;padding:12px 14px;border-radius:20px;background:var(--panel);border:1px solid var(--line);flex-wrap:wrap}
-    .small{font-size:.82rem;color:var(--muted)}
-    .section{display:grid;gap:16px;margin-top:16px}
-    .group{background:linear-gradient(180deg,rgba(24,27,40,.98),rgba(18,20,30,.98));border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:var(--shadow)}
-    .group-head{padding:14px 14px 12px;display:grid;gap:8px}
-    .head-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
-    .group h2{margin:0;font-size:1rem;font-weight:800}.muted{color:var(--muted)}
-    .progress{height:10px;background:#0f1220;border-radius:999px;overflow:hidden;border:1px solid #232844}
-    .progress > div{height:100%;background:linear-gradient(90deg,var(--red),var(--gold));width:0%}
+    html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+    body{
+      padding:0 0 calc(var(--navh) + 26px + env(safe-area-inset-bottom));
+      background:
+        radial-gradient(560px 320px at 18% -6%, rgba(228,38,47,.16), transparent 60%),
+        radial-gradient(460px 280px at 100% 0%, rgba(242,191,75,.10), transparent 55%),
+        linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);
+      background-attachment:fixed;
+      min-height:100vh;
+    }
+    button,input,select,textarea{font:inherit;color:inherit}
+    button{-webkit-appearance:none;appearance:none}
+    .app{max-width:var(--max);margin:0 auto;padding:14px 14px 8px}
 
-    .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px;padding:0 12px 14px}
-    .postercard{position:relative;border-radius:18px;overflow:hidden;background:#10131d;border:1px solid #242941;box-shadow:0 10px 22px rgba(0,0,0,.35);transition:transform .15s ease,box-shadow .15s ease;display:flex;flex-direction:column}
-    .postercard:hover{transform:translateY(-3px);box-shadow:0 16px 30px rgba(0,0,0,.45)}
-    .poster-wrap{position:relative;aspect-ratio:2/3;background:linear-gradient(135deg,#252838,#141725);overflow:hidden}
-    .poster-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-    .poster-fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:2.2rem;color:#4b5170}
-    .badge-status{position:absolute;top:8px;left:8px;padding:4px 9px;border-radius:999px;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#0b0c14;background:#9aa3c2;z-index:2}
+    /* header */
+    .hero{position:sticky;top:0;z-index:30;padding:calc(10px + env(safe-area-inset-top)) 0 10px;margin:-14px -14px 0;background:linear-gradient(180deg,rgba(7,7,11,.97),rgba(7,7,11,.86) 75%,rgba(7,7,11,0));backdrop-filter:blur(14px)}
+    .hero-in{padding:0 14px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .brand-mini{display:flex;align-items:center;gap:10px}
+    .logo-mini{width:34px;height:26px;flex:0 0 auto}
+    .brand-mini strong{font-size:1.02rem;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:7px}
+    .fetch-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 0 rgba(242,191,75,.6);animation:pulse 1.4s ease-out infinite}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(242,191,75,.55)}70%{box-shadow:0 0 0 8px rgba(242,191,75,0)}100%{box-shadow:0 0 0 0 rgba(242,191,75,0)}}
+    .topbar-actions{display:flex;gap:8px}
+    .icon-btn{position:relative;width:38px;height:38px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-size:1rem;cursor:pointer;transition:transform .12s,background .12s}
+    .icon-btn:active{transform:scale(.9)}
+    .icon-btn .dot{position:absolute;top:-2px;right:-2px;width:9px;height:9px;border-radius:50%;background:var(--red2);border:2px solid var(--bg)}
+    .search-bar{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);padding:11px 13px;border-radius:15px;margin-top:11px}
+    .search-bar span{opacity:.6;font-size:.9rem}
+    .search-bar input{width:100%;border:0;outline:0;background:none;color:var(--text);font-size:.92rem}
+    .search-bar input::placeholder{color:var(--muted2)}
+
+    .stat-strip{display:flex;gap:0;margin:11px 0 2px;padding:11px 4px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+    .s-item{flex:1;text-align:center;position:relative}
+    .s-item + .s-item::before{content:'';position:absolute;left:0;top:18%;bottom:18%;width:1px;background:var(--line)}
+    .s-item strong{display:block;font-size:1rem;font-weight:800;letter-spacing:-.01em}
+    .s-item span{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+
+    .section{display:grid;gap:14px;margin-top:16px}
+    .group{background:linear-gradient(180deg,rgba(23,25,39,.9),rgba(15,16,25,.9));border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-sm)}
+    .group-head{padding:14px 14px 10px;display:grid;gap:8px}
+    .group-head h2{margin:0;font-size:.92rem;font-weight:800;letter-spacing:-.01em}
+    .group-head .muted{font-size:.72rem;color:var(--muted);font-weight:600}
+    .progress{height:5px;background:#0f1220;border-radius:999px;overflow:hidden}
+    .progress > div{height:100%;background:linear-gradient(90deg,var(--red),var(--gold));width:0%;transition:width .4s ease}
+
+    /* poster grid */
+    .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:11px;padding:0 12px 13px}
+    .postercard{border:0;padding:0;text-align:left;background:none;cursor:pointer;border-radius:16px;display:flex;flex-direction:column;animation:cardIn .3s ease both}
+    @keyframes cardIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+    .postercard:active .poster-wrap{transform:scale(.965)}
+    .poster-wrap{position:relative;aspect-ratio:2/3;border-radius:15px;overflow:hidden;background:#0e0f18;box-shadow:0 8px 18px rgba(0,0,0,.4);transition:transform .12s ease;isolation:isolate}
+    .poster-fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:1.8rem;background:
+        linear-gradient(135deg,#20233a,#12131c);
+      background-size:200% 200%;animation:shimmer 3.2s ease-in-out infinite;color:#454b6b}
+    @keyframes shimmer{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}
+    .poster-backdrop{position:absolute;inset:-10%;background-size:cover;background-position:center;filter:blur(16px) saturate(1.3) brightness(.5);transform:scale(1.2);z-index:1}
+    .poster-fg{position:relative;width:100%;height:100%;object-fit:contain;object-position:center;display:block;z-index:2}
+    .poster-wrap.img-error .poster-fg,.poster-wrap.img-error .poster-backdrop{display:none}
+    .badge-status{position:absolute;top:7px;left:7px;width:9px;height:9px;border-radius:50%;z-index:3;box-shadow:0 0 0 2px rgba(7,7,11,.7)}
     .badge-status.seen{background:var(--ok)}
     .badge-status.progressing{background:var(--warn)}
     .badge-status.planned{background:var(--blue)}
-    .badge-rating{position:absolute;top:8px;right:8px;background:rgba(9,10,17,.86);backdrop-filter:blur(4px);color:#ffe9b8;padding:4px 9px;border-radius:999px;font-size:.72rem;font-weight:800;border:1px solid rgba(255,255,255,.14);z-index:2}
-    .badge-together{position:absolute;bottom:8px;right:8px;background:rgba(9,10,17,.72);border-radius:999px;padding:3px 7px;font-size:.85rem;z-index:2}
-    .postercard .info{padding:10px 10px 12px;display:flex;flex-direction:column;gap:8px;flex:1}
-    .p-title{font-size:.85rem;font-weight:700;line-height:1.22;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.1em}
-    .p-notes{font-size:.75rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .p-actions{display:flex;gap:6px;margin-top:auto}
-    .p-actions button{flex:1;min-height:34px;padding:6px;font-size:.85rem;border-radius:12px}
+    .badge-rating{position:absolute;top:6px;right:6px;background:rgba(8,9,14,.82);backdrop-filter:blur(4px);color:var(--gold2);padding:3px 7px;border-radius:999px;font-size:.66rem;font-weight:800;border:1px solid rgba(255,255,255,.1);z-index:3;display:flex;align-items:center;gap:2px}
+    .badge-together{position:absolute;bottom:6px;right:6px;font-size:.78rem;z-index:3;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+    .p-title{font-size:.75rem;font-weight:700;line-height:1.2;margin:7px 1px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:1.9em;color:#e7e9f4}
 
-    dialog{width:min(100%,var(--max));border:0;padding:0;background:transparent} dialog::backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(5px)}
-    .sheet{background:linear-gradient(180deg,#171925,#10111a);border:1px solid #2b3047;border-radius:28px;padding:16px;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
-    .sheet h3{margin:0 0 12px;font-weight:800}.grid{display:grid;gap:10px}.field{display:grid;gap:7px}.field label{font-size:.84rem;color:var(--muted);font-weight:600}
-    .field input,.field select,.field textarea{width:100%;background:#0b0d14;color:var(--text);border:1px solid var(--line);padding:13px 14px;border-radius:16px;outline:0}
-    .check{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:#0d1018;border:1px solid var(--line)}
-    .actions2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-    .catalog{display:grid;gap:10px}.suggestion{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
-    .empty{padding:24px 16px;text-align:center;color:var(--muted)}
+    /* bottom nav */
+    .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:35;display:flex;gap:6px;padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:rgba(9,10,16,.9);backdrop-filter:blur(18px);border-top:1px solid rgba(255,255,255,.06)}
+    .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px 4px;border-radius:14px;color:var(--muted);font-size:.63rem;font-weight:700;border:0;background:none;cursor:pointer;transition:color .15s}
+    .nav-ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--panel2);font-size:.86rem;font-weight:800;color:var(--muted);transition:background .15s,color .15s,box-shadow .15s}
+    .nav-item.active{color:var(--text)}
+    .nav-item.active .nav-ic{background:linear-gradient(135deg,var(--red),var(--gold));color:#fff;box-shadow:0 4px 14px rgba(228,38,47,.4)}
 
-    .popcorn-picker{display:flex;flex-wrap:wrap;gap:2px;padding:6px 4px;background:#0b0d14;border:1px solid var(--line);border-radius:16px}
-    .popcorn-picker button{background:none;border:0;font-size:1.5rem;opacity:.3;cursor:pointer;padding:3px;line-height:1;transition:opacity .12s,transform .12s}
-    .popcorn-picker button.active{opacity:1}
-    .popcorn-picker button:hover{transform:scale(1.18)}
-    .rating-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .rating-readout{font-size:.86rem;color:var(--text);font-weight:700;white-space:nowrap}
-    .link-btn{background:none;border:0;color:var(--muted);font-size:.78rem;text-decoration:underline;cursor:pointer;padding:0}
+    .fab{position:fixed;right:16px;bottom:calc(var(--navh) + 20px + env(safe-area-inset-bottom));z-index:36;width:56px;height:56px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--red),var(--red2));color:#fff;font-size:1.7rem;font-weight:600;box-shadow:0 12px 26px rgba(228,38,47,.4);cursor:pointer;display:grid;place-items:center;transition:transform .12s}
+    .fab:active{transform:scale(.9)}
 
-    .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:40;width:62px;height:62px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--red),var(--red2));color:#fff;font-size:1.9rem;box-shadow:0 14px 30px rgba(228,38,47,.35);cursor:pointer}
-    .app-footer{text-align:center;margin-top:26px;color:var(--muted);font-size:.76rem;opacity:.75}
+    .empty{padding:34px 16px;text-align:center;color:var(--muted);font-size:.86rem}
 
-    @media (max-width:540px){.row{grid-template-columns:1fr auto}.settings-only{display:none}.stats{grid-template-columns:repeat(3,1fr)}.grid-cards{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))}}
+    /* dialogs */
+    dialog{width:min(100%,var(--max));border:0;padding:0;background:transparent}
+    dialog::backdrop{background:rgba(0,0,0,.75);backdrop-filter:blur(6px)}
+    .sheet{background:linear-gradient(180deg,#15172400,#12131c);background-color:#141522;border:1px solid #262a3c;border-radius:24px 24px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));box-shadow:var(--shadow);max-height:88vh;overflow:auto}
+    dialog[open]{position:fixed;left:0;right:0;bottom:0;margin:0;top:auto;animation:sheetUp .22s ease}
+    @keyframes sheetUp{from{transform:translateY(14px);opacity:.7}to{transform:none;opacity:1}}
+    .sheet h3{margin:2px 0 14px;font-weight:800;font-size:1.05rem;letter-spacing:-.01em}
+    .grid{display:grid;gap:11px}
+    .field{display:grid;gap:7px}
+    .field label{font-size:.78rem;color:var(--muted);font-weight:700}
+    .field input,.field select,.field textarea{width:100%;background:#0b0c14;color:var(--text);border:1px solid var(--line);padding:12px 13px;border-radius:14px;outline:0;font-size:.92rem}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:#3b4463}
+    .check{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:14px;background:#0d0e17;border:1px solid var(--line)}
+    .actions2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
+    .btn{min-height:46px;padding:12px 14px;border-radius:15px;background:var(--panel2);color:var(--text);border:1px solid var(--line);font-weight:700;cursor:pointer;font-size:.88rem}
+    .btn:active{transform:scale(.97)}
+    .btn-primary{background:linear-gradient(135deg,var(--red),var(--red2));border:0;color:#fff}
+    .btn-ghost{background:none;border:1px solid var(--line);color:var(--muted)}
+    .btn-block{width:100%;margin-top:10px}
+
+    .chip-row{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{white-space:nowrap;padding:9px 13px;border-radius:999px;background:#1a1c2a;color:var(--muted);border:1px solid transparent;font-weight:700;font-size:.78rem;cursor:pointer}
+    .chip.active{color:var(--text);background:linear-gradient(180deg,#2a2f47,#1c1f30);border-color:#3b4463}
+
+    .catalog{display:grid;gap:9px}
+    .suggestion{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 12px;border-radius:15px;background:var(--panel);border:1px solid var(--line)}
+    .suggestion .card-title{font-weight:700;font-size:.86rem}
+    .suggestion .muted{font-size:.74rem}
+    .tiny{min-height:auto;padding:8px 12px;border-radius:12px;font-size:.78rem}
+
+    .popcorn-picker{display:flex;flex-wrap:wrap;gap:1px;padding:8px 6px;background:#0b0c14;border:1px solid var(--line);border-radius:14px;justify-content:space-between}
+    .popcorn-picker button{background:none;border:0;font-size:1.4rem;opacity:.28;cursor:pointer;padding:2px;line-height:1;transition:opacity .12s,transform .12s,filter .12s}
+    .popcorn-picker button.active{opacity:1;filter:drop-shadow(0 0 6px rgba(242,191,75,.55))}
+    .popcorn-picker button:active{transform:scale(1.2)}
+    .rating-row{display:flex;align-items:center;justify-content:space-between}
+    .rating-readout{font-size:.82rem;color:var(--gold2);font-weight:800}
+    .link-btn{background:none;border:0;color:var(--muted);font-size:.76rem;text-decoration:underline;cursor:pointer;padding:2px 0;justify-self:start}
+
+    /* detail sheet */
+    .detail-poster{width:150px;aspect-ratio:2/3;border-radius:16px;overflow:hidden;margin:0 auto 14px;position:relative;background:#0e0f18;box-shadow:0 10px 24px rgba(0,0,0,.5)}
+    .detail-title{text-align:center;font-size:1.08rem;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+    .detail-meta{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+    .pill{padding:5px 10px;border-radius:999px;background:#1c2031;color:var(--muted);font-size:.68rem;font-weight:700}
+    .status-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+    .status-btn{padding:10px 6px;border-radius:13px;background:#151726;border:1px solid var(--line);color:var(--muted);font-weight:700;font-size:.72rem;text-align:center;cursor:pointer}
+    .status-btn.active.seen{background:rgba(49,196,141,.16);border-color:var(--ok);color:#c8f4e3}
+    .status-btn.active.progress{background:rgba(255,180,84,.16);border-color:var(--warn);color:#ffe6c2}
+    .status-btn.active.planned{background:rgba(106,167,255,.16);border-color:var(--blue);color:#dbe9ff}
+    .detail-notes{font-size:.85rem;color:#d7dbef;background:#0d0e17;border:1px solid var(--line);border-radius:13px;padding:11px 12px;line-height:1.4}
+
+    .setup-note{font-size:.78rem;color:var(--muted);line-height:1.4;background:#0d0e17;border:1px solid var(--line);border-radius:13px;padding:11px 12px}
+    .setup-note code{color:var(--gold2)}
   </style>
 </head>
 <body>
   <div class="app">
     <div class="hero">
-      <div class="brand">
-        <svg class="logo" viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" aria-label="Logo Lara e Den Movie Log">
-          <defs>
-            <linearGradient id="g1" x1="0" x2="1"><stop offset="0%" stop-color="#a10d14"/><stop offset="100%" stop-color="#ff4141"/></linearGradient>
-            <linearGradient id="g2" x1="0" x2="1"><stop offset="0%" stop-color="#ff6767"/><stop offset="100%" stop-color="#cf151d"/></linearGradient>
-          </defs>
-          <circle cx="80" cy="49" r="18" fill="#f2bf4b" opacity=".95"/>
-          <path d="M16 70c16-3 25-11 34-25 8-12 22-17 38-17-11 8-16 14-21 25-5 11-18 22-38 26-6 1-10 0-13-9z" fill="url(#g1)"/>
-          <path d="M144 70c-16-3-25-11-34-25-8-12-22-17-38-17 11 8 16 14 21 25 5 11 18 22 38 26 6 1 10 0 13-9z" fill="url(#g2)"/>
-        </svg>
-        <div><h1>Lara &amp; Den · Movie Log</h1><p>La nostra videoteca privata — voti, locandine e progressi delle saghe</p></div>
-      </div>
-      <div class="row">
-        <div class="search"><span>🔎</span><input id="searchInput" type="search" placeholder="Cerca titolo, saga o nota" /></div>
-        <button class="btn btn-primary" id="addBtn">+ Aggiungi</button>
-        <button class="btn settings-only" id="settingsBtn">⚙️</button>
-      </div>
-      <div class="stats" id="stats"></div>
-      <div class="toolbar" id="tabs"></div>
-      <div class="filters" id="filters"></div>
-    </div>
-
-    <div class="panelbar">
-      <div>
-        <div id="storageMode">Storage: locale</div>
-        <div class="small" id="posterStatus" hidden>🔎 Ricerca locandine automatiche in corso…</div>
-        <div class="small" id="posterStatusIdle">GitHub Pages pronto · locandine automatiche · TMDB opzionale</div>
-      </div>
-      <div class="meta">
-        <select id="sortSelect" class="sortSelect">
-          <option value="group">Per franchise</option>
-          <option value="rating">Voto più alto</option>
-          <option value="title">Titolo A-Z</option>
-        </select>
-        <button class="btn btn-soft tiny" id="catalogBtn">Catalogo</button>
-        <button class="btn btn-soft tiny" id="settingsBtn2">Setup</button>
+      <div class="hero-in">
+        <div class="topbar">
+          <div class="brand-mini">
+            <svg class="logo-mini" viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg" aria-label="Logo">
+              <defs>
+                <linearGradient id="g1" x1="0" x2="1"><stop offset="0%" stop-color="#a10d14"/><stop offset="100%" stop-color="#ff4141"/></linearGradient>
+                <linearGradient id="g2" x1="0" x2="1"><stop offset="0%" stop-color="#ff6767"/><stop offset="100%" stop-color="#cf151d"/></linearGradient>
+              </defs>
+              <circle cx="80" cy="49" r="18" fill="#f2bf4b" opacity=".95"/>
+              <path d="M16 70c16-3 25-11 34-25 8-12 22-17 38-17-11 8-16 14-21 25-5 11-18 22-38 26-6 1-10 0-13-9z" fill="url(#g1)"/>
+              <path d="M144 70c-16-3-25-11-34-25-8-12-22-17-38-17 11 8 16 14 21 25 5 11 18 22 38 26 6 1 10 0 13-9z" fill="url(#g2)"/>
+            </svg>
+            <strong>Lara &amp; Den<span class="fetch-dot" id="fetchDot" hidden></span></strong>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-btn" id="filterBtn" title="Filtri">🎚️<span class="dot" id="filterDot" hidden></span></button>
+            <button class="icon-btn" id="catalogBtn" title="Catalogo">📚</button>
+            <button class="icon-btn" id="settingsBtn" title="Setup">⚙️</button>
+          </div>
+        </div>
+        <div class="search-bar"><span>🔎</span><input id="searchInput" type="search" placeholder="Cerca titolo, saga o nota" /></div>
+        <div class="stat-strip" id="stats"></div>
       </div>
     </div>
 
     <div class="section" id="content"></div>
-
-    <div class="app-footer">Lara &amp; Den · Movie Log — dati salvati in locale nel tuo browser</div>
   </div>
 
-  <button class="fab" id="fab">+</button>
+  <nav class="bottom-nav" id="bottomNav"></nav>
+  <button class="fab" id="fab" title="Aggiungi">+</button>
+
+  <dialog id="detailDialog">
+    <div class="sheet">
+      <div class="detail-poster" id="detailPoster"></div>
+      <h3 class="detail-title" id="detailTitle"></h3>
+      <div class="detail-meta" id="detailMeta"></div>
+      <div class="field">
+        <label>Stato</label>
+        <div class="status-row" id="detailStatusRow"></div>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <div class="rating-row"><label>Voto 🍿</label><span class="rating-readout" id="detailRatingReadout">—</span></div>
+        <div class="popcorn-picker" id="detailPopcorn"></div>
+      </div>
+      <div class="field" id="detailNotesWrap" style="margin-top:12px" hidden>
+        <label>Note</label>
+        <div class="detail-notes" id="detailNotes"></div>
+      </div>
+      <div class="actions2"><button class="btn" id="detailEditBtn">✏️ Modifica</button><button class="btn" id="detailDeleteBtn">🗑️ Elimina</button></div>
+      <button class="btn btn-block" id="detailCloseBtn">Chiudi</button>
+    </div>
+  </dialog>
 
   <dialog id="itemDialog">
     <form class="sheet" id="itemForm" method="dialog">
@@ -148,7 +215,7 @@
         <div class="field"><label for="list">Categoria</label><select id="list"><option value="IlDen">IlDen</option><option value="LaLara">LaLara</option><option value="Classici">Classici</option></select></div>
         <div class="field"><label for="group">Franchise / gruppo</label><input id="group" placeholder="Marvel MCU, X-Men, Classici..." /></div>
         <div class="field"><label for="status">Stato</label><select id="status"><option value="seen">Visto</option><option value="progress">In corso</option><option value="planned">Da vedere</option></select></div>
-        <div class="check"><input id="together" type="checkbox" /><label for="together">Visto insieme</label></div>
+        <div class="check"><input id="together" type="checkbox" /><label for="together">Visto insieme 💑</label></div>
         <div class="field">
           <div class="rating-row"><label>Voto 🍿</label><span class="rating-readout" id="ratingReadout">Non votato</span></div>
           <div class="popcorn-picker" id="popcornPicker"></div>
@@ -156,22 +223,56 @@
           <button type="button" class="link-btn" id="clearRatingBtn">Cancella voto</button>
         </div>
         <div class="field"><label for="poster">Locandina URL</label><input id="poster" placeholder="Automatica, oppure incolla un URL" /></div>
-        <div class="actions2" style="margin-top:0"><button type="button" class="btn" id="tmdbBtn">Cerca locandina</button><button type="button" class="btn" id="clearPosterBtn">Togli locandina</button></div>
+        <div class="actions2" style="margin-top:0"><button type="button" class="btn tiny" id="tmdbBtn">Cerca locandina</button><button type="button" class="btn tiny" id="clearPosterBtn">Togli locandina</button></div>
         <div class="field"><label for="notes">Note</label><textarea id="notes" rows="3" placeholder="Es. siamo al terzo"></textarea></div>
       </div>
       <div class="actions2"><button type="button" class="btn" id="cancelBtn">Annulla</button><button type="submit" class="btn btn-primary">Salva</button></div>
     </form>
   </dialog>
 
-  <dialog id="catalogDialog"><div class="sheet"><h3>Catalogo rapido</h3><div class="small" style="margin-bottom:12px">Aggiunte rapide ai film e serie più famosi.</div><div class="actions2" style="margin-bottom:12px"><button class="btn" id="closeCatalog">Chiudi</button><button class="btn" id="resetSeed">Ripristina seed</button></div><div class="catalog" id="catalogList"></div></div></dialog>
+  <dialog id="filterDialog">
+    <div class="sheet">
+      <h3>Filtri e ordinamento</h3>
+      <div class="grid">
+        <div class="field"><label>Stato</label><div class="chip-row" id="statusChips"></div></div>
+        <div class="check"><input id="togetherToggle" type="checkbox" /><label for="togetherToggle">Solo visti insieme 💑</label></div>
+        <div class="field"><label for="sortSelect">Ordina per</label><select id="sortSelect"><option value="group">Franchise / saga</option><option value="rating">Voto più alto</option><option value="title">Titolo A-Z</option></select></div>
+      </div>
+      <div class="actions2"><button class="btn" id="resetFiltersBtn">Reset</button><button class="btn btn-primary" id="applyFiltersBtn">Applica</button></div>
+    </div>
+  </dialog>
 
-  <dialog id="settingsDialog"><div class="sheet"><h3>Setup</h3><div class="grid"><div class="small">Le locandine si cercano già automaticamente (Wikipedia, nessuna chiave richiesta). TMDB qui sotto è opzionale e serve solo per locandine di qualità superiore.</div><div class="field"><label for="supaUrl">Supabase URL</label><input id="supaUrl" placeholder="https://xxxx.supabase.co" /></div><div class="field"><label for="supaKey">Supabase anon key</label><textarea id="supaKey" rows="3" placeholder="Incolla qui la anon key"></textarea></div><div class="small">Se usi Supabase, aggiungi alla tabella "titles" le colonne <code>rating</code> (int) e <code>poster_tried</code> (bool).</div><div class="field"><label for="tmdbToken">TMDB Bearer token (opzionale)</label><textarea id="tmdbToken" rows="3" placeholder="Token opzionale per locandine di qualità superiore"></textarea></div></div><div class="actions2"><button class="btn" id="closeSettings">Chiudi</button><button class="btn btn-primary" id="saveSettings">Salva setup</button></div></div></dialog>
+  <dialog id="catalogDialog">
+    <div class="sheet">
+      <h3>Catalogo rapido</h3>
+      <div class="setup-note" style="margin-bottom:12px">Aggiunte rapide ai film e serie più famosi.</div>
+      <div class="actions2" style="margin-bottom:12px"><button class="btn" id="closeCatalog">Chiudi</button><button class="btn" id="resetSeed">Ripristina seed</button></div>
+      <div class="catalog" id="catalogList"></div>
+    </div>
+  </dialog>
+
+  <dialog id="settingsDialog">
+    <div class="sheet">
+      <h3>Setup</h3>
+      <div class="grid">
+        <div class="setup-note" id="storageMode">Storage: locale</div>
+        <div class="setup-note">Le locandine si cercano già automaticamente (Wikipedia, nessuna chiave richiesta).</div>
+        <button type="button" class="btn" id="retryPostersBtn">🔄 Ricerca locandine mancanti</button>
+        <div class="field"><label for="supaUrl">Supabase URL (opzionale)</label><input id="supaUrl" placeholder="https://xxxx.supabase.co" /></div>
+        <div class="field"><label for="supaKey">Supabase anon key</label><textarea id="supaKey" rows="3" placeholder="Incolla qui la anon key"></textarea></div>
+        <div class="setup-note">Se usi Supabase, aggiungi alla tabella "titles" le colonne <code>rating</code> (int) e <code>poster_tried</code> (bool).</div>
+        <div class="field"><label for="tmdbToken">TMDB Bearer token (opzionale)</label><textarea id="tmdbToken" rows="3" placeholder="Per locandine di qualità superiore"></textarea></div>
+      </div>
+      <div class="actions2"><button class="btn" id="closeSettings">Chiudi</button><button class="btn btn-primary" id="saveSettings">Salva setup</button></div>
+    </div>
+  </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const CONFIG = { supabaseUrl:'', supabaseAnonKey:'', tmdbToken:'' };
     const SETTINGS_KEY = 'laraden.settings.v2';
     const LISTS = ['IlDen','LaLara','Classici'];
+    const LIST_META = { IlDen:{ label:'IlDen', icon:'D' }, LaLara:{ label:'LaLara', icon:'L' }, Classici:{ label:'Classici', icon:'🎞' } };
     const STATUS_LABEL = { seen:'Visto', progress:'In corso', planned:'Da vedere' };
     const STATUS_CLASS = { seen:'seen', progress:'progressing', planned:'planned' };
     const STATUS_FILTERS = ['all','seen','progress','planned'];
@@ -228,7 +329,9 @@
     const loadSettings = () => ({...CONFIG, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'))});
     const saveSettingsLS = (s) => localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
     let settings = loadSettings();
-    let activeList = 'IlDen', searchTerm = '', editingId = null, items = [], remote = null, statusFilter = 'all', togetherOnly = false, sortMode = 'group';
+    let activeList = 'IlDen', searchTerm = '', editingId = null, detailId = null, items = [], remote = null;
+    let statusFilter = 'all', togetherOnly = false, sortMode = 'group';
+    let draftStatusFilter = statusFilter, draftTogetherOnly = togetherOnly, draftSortMode = sortMode;
 
     function migrateIfNeeded(){
       if(localStorage.getItem('laraden.movies.v3')) return;
@@ -297,19 +400,20 @@
       const tog = items.filter(x=>x.together).length;
       const ratedInList = inList.filter(x=>x.rating>0);
       const avg = ratedInList.length ? (ratedInList.reduce((s,x)=>s+x.rating,0)/ratedInList.length).toFixed(1) : '—';
-      $('stats').innerHTML = `<div class="stat"><strong>${inList.length}</strong><span>${activeList}</span></div><div class="stat"><strong>${seen}</strong><span>Visti</span></div><div class="stat"><strong>${prog}</strong><span>In corso</span></div><div class="stat"><strong>${tog}</strong><span>Insieme</span></div><div class="stat"><strong>🍿 ${avg}</strong><span>Voto medio</span></div>`;
+      $('stats').innerHTML = `
+        <div class="s-item"><strong>${inList.length}</strong><span>${activeList}</span></div>
+        <div class="s-item"><strong>${seen}</strong><span>Visti</span></div>
+        <div class="s-item"><strong>${prog}</strong><span>In corso</span></div>
+        <div class="s-item"><strong>${tog}</strong><span>Insieme</span></div>
+        <div class="s-item"><strong>🍿${avg}</strong><span>Voto medio</span></div>`;
     }
 
-    function renderTabs(){
-      $('tabs').innerHTML = LISTS.map(list => `<button class="tab ${list===activeList?'active':''}" data-list="${list}">${list}</button>`).join('');
+    function renderBottomNav(){
+      $('bottomNav').innerHTML = LISTS.map(l => `<button class="nav-item ${l===activeList?'active':''}" data-list="${l}"><span class="nav-ic">${LIST_META[l].icon}</span>${LIST_META[l].label}</button>`).join('');
       document.querySelectorAll('[data-list]').forEach(btn => btn.onclick = ()=>{ activeList = btn.dataset.list; render(); });
     }
 
-    function renderFilters(){
-      $('filters').innerHTML = STATUS_FILTERS.map(s => `<button class="chip ${statusFilter===s?'active':''}" data-status="${s}">${s==='all'?'Tutti':STATUS_LABEL[s]}</button>`).join('') + `<button class="chip ${togetherOnly?'active':''}" id="togFilter">Solo insieme</button>`;
-      document.querySelectorAll('[data-status]').forEach(btn => btn.onclick = ()=>{ statusFilter = btn.dataset.status; renderContent(); renderFilters(); });
-      $('togFilter').onclick = ()=>{ togetherOnly = !togetherOnly; renderContent(); renderFilters(); };
-    }
+    function updateFilterDot(){ $('filterDot').hidden = (statusFilter === 'all' && !togetherOnly); }
 
     function groupProgress(entries){
       const total = entries.length || 1;
@@ -317,43 +421,40 @@
       return { seen, total, pct: Math.round((seen/total)*100) };
     }
 
-    function cardTemplate(item){
-      const img = item.poster ? `<img src="${escapeHtml(item.poster)}" alt="${escapeHtml(item.title)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'" />` : '';
-      return `<article class="postercard">
-        <div class="poster-wrap">
-          <div class="poster-fallback">🎬</div>
-          ${img}
-          <div class="badge-status ${STATUS_CLASS[item.status]}">${STATUS_LABEL[item.status]}</div>
-          ${item.rating>0?`<div class="badge-rating">🍿 ${item.rating}</div>`:''}
-          ${item.together?`<div class="badge-together">💑</div>`:''}
-        </div>
-        <div class="info">
-          <div class="p-title">${escapeHtml(item.title)}</div>
-          ${item.notes?`<div class="p-notes">${escapeHtml(item.notes)}</div>`:''}
-          <div class="p-actions">
-            <button class="btn tiny" data-toggle="${item.id}" title="Cambia stato">🔁</button>
-            <button class="btn tiny" data-edit="${item.id}" title="Modifica">✏️</button>
-            <button class="btn tiny" data-del="${item.id}" title="Elimina">🗑️</button>
-          </div>
-        </div>
-      </article>`;
+    function posterNode(item, withBadges){
+      const hasPoster = !!item.poster;
+      const safeUrl = escapeHtml(item.poster || '');
+      const fallback = `<div class="poster-fallback">🎬</div>`;
+      const backdrop = hasPoster ? `<div class="poster-backdrop" style="background-image:url('${safeUrl}')"></div>` : '';
+      const img = hasPoster ? `<img class="poster-fg" src="${safeUrl}" alt="${escapeHtml(item.title)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.parentElement.classList.add('img-error')" />` : '';
+      const badges = withBadges ? `
+        <div class="badge-status ${STATUS_CLASS[item.status]}"></div>
+        ${item.rating>0?`<div class="badge-rating">🍿${item.rating}</div>`:''}
+        ${item.together?`<div class="badge-together">💑</div>`:''}` : '';
+      return `<div class="poster-wrap ${hasPoster?'':'img-error'}">${fallback}${backdrop}${img}${badges}</div>`;
+    }
+
+    function cardTemplate(item, idx){
+      const delay = Math.min((idx||0) * 25, 260);
+      return `<button type="button" class="postercard" data-open="${item.id}" style="animation-delay:${delay}ms">
+        ${posterNode(item, true)}
+        <div class="p-title">${escapeHtml(item.title)}</div>
+      </button>`;
     }
 
     function attachCardHandlers(){
-      document.querySelectorAll('[data-edit]').forEach(b => b.onclick = ()=>openEdit(b.dataset.edit));
-      document.querySelectorAll('[data-del]').forEach(b => b.onclick = async ()=>{ await adapter().remove(b.dataset.del); await refresh(); });
-      document.querySelectorAll('[data-toggle]').forEach(b => b.onclick = async ()=>{ const item = items.find(x=>x.id===b.dataset.toggle); if(!item) return; await adapter().upsert({...item, status:statusCycle(item.status)}); await refresh(); });
+      document.querySelectorAll('[data-open]').forEach(b => b.onclick = ()=>openDetail(b.dataset.open));
     }
 
     function renderContent(){
       const list = filteredItems();
-      if(!list.length){ $('content').innerHTML = '<div class="group"><div class="empty">Nessun titolo. Prova a togliere i filtri o aggiungi dal catalogo.</div></div>'; return; }
+      if(!list.length){ $('content').innerHTML = '<div class="group"><div class="empty">Nessun titolo qui. Prova a togliere i filtri o aggiungi dal catalogo 📚</div></div>'; return; }
 
       if(sortMode === 'group'){
         const groups = grouped(list);
         $('content').innerHTML = groups.map(([name, entries]) => {
           const gp = groupProgress(entries);
-          return `<section class="group"><div class="group-head"><div class="head-top"><div><h2>${escapeHtml(name)}</h2><div class="muted">${gp.seen}/${gp.total} completati · ${gp.pct}%</div></div><div class="pill" style="padding:6px 10px;border-radius:999px;background:#20253a;color:var(--muted);font-size:.76rem">${activeList}</div></div><div class="progress"><div style="width:${gp.pct}%"></div></div></div><div class="grid-cards">${entries.map(cardTemplate).join('')}</div></section>`;
+          return `<section class="group"><div class="group-head"><h2>${escapeHtml(name)}</h2><div class="muted">${gp.seen}/${gp.total} completati · ${gp.pct}%</div><div class="progress"><div style="width:${gp.pct}%"></div></div></div><div class="grid-cards">${entries.map((it,i)=>cardTemplate(it,i)).join('')}</div></section>`;
         }).join('');
       } else {
         const sorted = [...list].sort((a,b)=>{
@@ -361,7 +462,7 @@
           return a.title.localeCompare(b.title,'it');
         });
         const label = sortMode==='rating' ? 'Ordinato per voto' : 'Ordine alfabetico';
-        $('content').innerHTML = `<section class="group"><div class="group-head"><div class="head-top"><div><h2>${label}</h2><div class="muted">${sorted.length} titoli</div></div></div></div><div class="grid-cards">${sorted.map(cardTemplate).join('')}</div></section>`;
+        $('content').innerHTML = `<section class="group"><div class="group-head"><h2>${label}</h2><div class="muted">${sorted.length} titoli</div></div><div class="grid-cards">${sorted.map((it,i)=>cardTemplate(it,i)).join('')}</div></section>`;
       }
       attachCardHandlers();
     }
@@ -371,8 +472,9 @@
       document.querySelectorAll('[data-pick]').forEach(btn => btn.onclick = async ()=>{ const c = catalogItems[Number(btn.dataset.pick)]; const payload = { id:crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), title:c.title, kind:c.kind, list:c.list, group:c.group, status:'planned', notes:'', together:!!c.together, poster:'', rating:0, posterTried:false }; await adapter().upsert(payload); await refresh(); ensurePosters(); });
     }
 
-    function render(){ renderStats(); renderTabs(); renderFilters(); renderContent(); renderCatalog(); }
+    function render(){ renderStats(); renderBottomNav(); renderContent(); renderCatalog(); updateFilterDot(); }
 
+    /* ---------- popcorn picker (edit form) ---------- */
     function renderPopcornPicker(value){
       const wrap = $('popcornPicker');
       wrap.innerHTML = Array.from({length:10},(_,i)=>i+1).map(n=>`<button type="button" data-val="${n}" class="${n<=value?'active':''}">🍿</button>`).join('');
@@ -400,11 +502,67 @@
       $('rating').value = r;
       renderPopcornPicker(r);
       $('ratingReadout').textContent = r>0 ? `${r}/10` : 'Non votato';
+      $('detailDialog').close();
       $('itemDialog').showModal();
     }
 
     function openEdit(id){ const item = items.find(x=>x.id===id); if(item) openNew(item); }
 
+    /* ---------- detail sheet ---------- */
+    function renderDetailPopcorn(value){
+      const wrap = $('detailPopcorn');
+      wrap.innerHTML = Array.from({length:10},(_,i)=>i+1).map(n=>`<button type="button" data-val="${n}" class="${n<=value?'active':''}">🍿</button>`).join('');
+      wrap.querySelectorAll('button').forEach(btn=>{
+        btn.onclick = async ()=>{
+          const v = Number(btn.dataset.val);
+          const item = items.find(x=>x.id===detailId); if(!item) return;
+          await adapter().upsert({...item, rating:v});
+          renderDetailPopcorn(v);
+          $('detailRatingReadout').textContent = `${v}/10`;
+          await refresh();
+        };
+      });
+    }
+
+    function renderDetailStatusRow(item){
+      const order = ['planned','progress','seen'];
+      $('detailStatusRow').innerHTML = order.map(s => `<button type="button" class="status-btn ${item.status===s?'active '+STATUS_CLASS[s]:''}" data-status="${s}">${STATUS_LABEL[s]}</button>`).join('');
+      $('detailStatusRow').querySelectorAll('[data-status]').forEach(btn=>{
+        btn.onclick = async ()=>{
+          const fresh = items.find(x=>x.id===detailId); if(!fresh) return;
+          await adapter().upsert({...fresh, status:btn.dataset.status});
+          await refresh();
+          const updated = items.find(x=>x.id===detailId);
+          if(updated) renderDetailStatusRow(updated);
+        };
+      });
+    }
+
+    function openDetail(id){
+      const item = items.find(x=>x.id===id); if(!item) return;
+      detailId = id;
+      $('detailPoster').innerHTML = posterNode(item, false);
+      $('detailTitle').textContent = item.title;
+      $('detailMeta').innerHTML = `<span class="pill">${escapeHtml(item.kind)}</span><span class="pill">${escapeHtml(item.group||'Senza gruppo')}</span>${item.together?'<span class="pill">💑 Insieme</span>':''}`;
+      renderDetailStatusRow(item);
+      renderDetailPopcorn(item.rating||0);
+      $('detailRatingReadout').textContent = item.rating>0 ? `${item.rating}/10` : 'Non votato';
+      if(item.notes){ $('detailNotesWrap').hidden = false; $('detailNotes').textContent = item.notes; }
+      else { $('detailNotesWrap').hidden = true; }
+      $('detailDialog').showModal();
+    }
+
+    $('detailCloseBtn').onclick = () => $('detailDialog').close();
+    $('detailEditBtn').onclick = () => { const item = items.find(x=>x.id===detailId); if(item) openNew(item); };
+    $('detailDeleteBtn').onclick = async () => {
+      if(!detailId) return;
+      if(!confirm('Eliminare questo titolo?')) return;
+      await adapter().remove(detailId);
+      $('detailDialog').close();
+      await refresh();
+    };
+
+    /* ---------- poster resolution ---------- */
     async function fetchTmdbPoster(title, kind){
       if(!settings.tmdbToken) return '';
       const type = kind === 'Serie' ? 'tv' : 'movie';
@@ -438,30 +596,46 @@
       return await fetchWikipediaPoster(title, kind);
     }
 
-    async function ensurePosters(){
-      const pending = items.filter(x => !x.poster && !x.posterTried);
+    async function ensurePosters(retryFailed=false){
+      const pending = items.filter(x => !x.poster && (retryFailed || !x.posterTried));
       if(!pending.length) return;
-      $('posterStatus').hidden = false; $('posterStatusIdle').hidden = true;
+      $('fetchDot').hidden = false;
       for(const item of pending){
         let poster = '';
         try { poster = await resolvePoster(item.title, item.kind); } catch {}
         try { await adapter().upsert({...item, poster, posterTried:true}); } catch {}
       }
-      $('posterStatus').hidden = true; $('posterStatusIdle').hidden = false;
+      $('fetchDot').hidden = true;
       await refresh();
     }
 
+    /* ---------- wiring ---------- */
     $('searchInput').addEventListener('input', e => { searchTerm = e.target.value; renderContent(); });
-    $('addBtn').onclick = () => openNew();
     $('fab').onclick = () => openNew();
     $('cancelBtn').onclick = () => $('itemDialog').close();
     $('catalogBtn').onclick = () => $('catalogDialog').showModal();
     $('closeCatalog').onclick = () => $('catalogDialog').close();
     $('settingsBtn').onclick = () => $('settingsDialog').showModal();
-    $('settingsBtn2').onclick = () => $('settingsDialog').showModal();
     $('closeSettings').onclick = () => $('settingsDialog').close();
-    $('sortSelect').onchange = e => { sortMode = e.target.value; renderContent(); };
     $('clearRatingBtn').onclick = () => { $('rating').value = 0; renderPopcornPicker(0); $('ratingReadout').textContent = 'Non votato'; };
+    $('retryPostersBtn').onclick = () => ensurePosters(true);
+
+    /* filter sheet */
+    $('filterBtn').onclick = () => {
+      draftStatusFilter = statusFilter; draftTogetherOnly = togetherOnly; draftSortMode = sortMode;
+      renderStatusChips();
+      $('togetherToggle').checked = draftTogetherOnly;
+      $('sortSelect').value = draftSortMode;
+      $('filterDialog').showModal();
+    };
+    function renderStatusChips(){
+      $('statusChips').innerHTML = STATUS_FILTERS.map(s => `<button type="button" class="chip ${draftStatusFilter===s?'active':''}" data-status="${s}">${s==='all'?'Tutti':STATUS_LABEL[s]}</button>`).join('');
+      $('statusChips').querySelectorAll('[data-status]').forEach(btn => btn.onclick = ()=>{ draftStatusFilter = btn.dataset.status; renderStatusChips(); });
+    }
+    $('togetherToggle').onchange = e => { draftTogetherOnly = e.target.checked; };
+    $('sortSelect').onchange = e => { draftSortMode = e.target.value; };
+    $('resetFiltersBtn').onclick = () => { draftStatusFilter='all'; draftTogetherOnly=false; draftSortMode='group'; renderStatusChips(); $('togetherToggle').checked=false; $('sortSelect').value='group'; };
+    $('applyFiltersBtn').onclick = () => { statusFilter = draftStatusFilter; togetherOnly = draftTogetherOnly; sortMode = draftSortMode; $('filterDialog').close(); renderContent(); updateFilterDot(); };
 
     $('tmdbBtn').onclick = async () => {
       const title = $('title').value.trim();
