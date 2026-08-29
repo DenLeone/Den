@@ -317,13 +317,13 @@
     </div>
   </dialog>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js"></script>
   <script>
     /* Credenziali condivise: inserite qui, valgono per entrambi i telefoni senza configurare nulla.
        La sicurezza dipende dalle policy RLS impostate su Supabase (vedi SUPABASE.md nel repo). */
     const CONFIG = {
-      supabaseUrl:'',
-      supabaseAnonKey:'',
+      supabaseUrl:'https://wasdnigmbnaymnyebmxz.supabase.co',
+      supabaseAnonKey:'sb_publishable_yoCkqQQ-VQorVsDPyHnlLg_pdRhsC2y',
       tmdbToken:''
     };
     const SETTINGS_KEY = 'laraden.settings.v2';
@@ -537,7 +537,7 @@
       const map = {
         cloud:['☁️ Sincronizzato','var(--ok)'],
         local:['📱 Solo questo telefono','var(--muted)'],
-        error:['⚠️ Cloud non raggiungibile — uso i dati locali','var(--warn)'],
+        error:['⚠️ Cloud non attivo, uso i dati locali','var(--warn)'],
         syncing:['⏳ Sincronizzo…','var(--accent)']
       };
       const [label,color] = map[state] || map.local;
@@ -606,9 +606,31 @@
       }
     }
 
+    function explainSupabaseError(err){
+      const parts = (err && typeof err === 'object')
+        ? [err.message, err.error_description, err.hint, err.details, err.code].filter(Boolean)
+        : [err];
+      const msg = String(parts.filter(Boolean).join(' ') || '');
+      if(/relation .*titles.* does not exist|schema cache|PGRST205/i.test(msg))
+        return 'la tabella "titles" non esiste ancora — esegui lo script SQL di SUPABASE.md';
+      if(/Invalid API key|JWT|apikey|401|Unauthorized/i.test(msg))
+        return 'chiave non valida o non abilitata (Project Settings → API Keys)';
+      if(/permission denied|RLS|row-level security|42501/i.test(msg))
+        return 'mancano le policy RLS — rilancia lo script SQL di SUPABASE.md';
+      if(/Failed to fetch|NetworkError|ERR_/i.test(msg))
+        return 'nessuna connessione a internet';
+      return msg.slice(0, 120) || 'errore sconosciuto';
+    }
+
     async function loadItems(){
-      remote = await initRemote().catch(()=>'error');
-      if(remote === 'error'){ remote = null; await refresh(); setSyncState('error'); return; }
+      let initError = null;
+      remote = await initRemote().catch(e => { initError = e; return null; });
+      if(initError){
+        remote = null;
+        await refresh();
+        setSyncState('error', explainSupabaseError(initError));
+        return;
+      }
       if(!remote){ await refresh(); setSyncState('local'); return; }
       await refresh();
       await seedCloudFromLocalIfEmpty().catch(()=>{});
