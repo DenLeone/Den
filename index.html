@@ -211,6 +211,7 @@
             <strong>Lara &amp; Den<span class="fetch-dot" id="fetchDot" hidden></span></strong>
           </div>
           <div class="topbar-actions">
+            <button class="icon-btn" id="syncBadge" title="Stato sincronizzazione">📱</button>
             <button class="icon-btn" id="filterBtn" title="Filtri">🎚️<span class="dot" id="filterDot" hidden></span></button>
             <button class="icon-btn" id="catalogBtn" title="Catalogo">📚</button>
             <button class="icon-btn" id="settingsBtn" title="Setup">⚙️</button>
@@ -306,6 +307,7 @@
         <div class="setup-note" id="storageMode">Storage: locale</div>
         <div class="setup-note">Le locandine si cercano già automaticamente (Wikipedia, nessuna chiave richiesta).</div>
         <button type="button" class="btn" id="retryPostersBtn">🔄 Ricerca locandine mancanti</button>
+        <button type="button" class="btn" id="pushLocalBtn">☁️ Carica la lista di questo telefono sul cloud</button>
         <div class="field"><label for="supaUrl">Supabase URL (opzionale)</label><input id="supaUrl" placeholder="https://xxxx.supabase.co" /></div>
         <div class="field"><label for="supaKey">Supabase anon key</label><textarea id="supaKey" rows="3" placeholder="Incolla qui la anon key"></textarea></div>
         <div class="setup-note">Se usi Supabase, aggiungi alla tabella "titles" le colonne <code>rating</code> (int) e <code>poster_tried</code> (bool).</div>
@@ -317,7 +319,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const CONFIG = { supabaseUrl:'', supabaseAnonKey:'', tmdbToken:'' };
+    /* Credenziali condivise: inserite qui, valgono per entrambi i telefoni senza configurare nulla.
+       La sicurezza dipende dalle policy RLS impostate su Supabase (vedi SUPABASE.md nel repo). */
+    const CONFIG = {
+      supabaseUrl:'',
+      supabaseAnonKey:'',
+      tmdbToken:''
+    };
     const SETTINGS_KEY = 'laraden.settings.v2';
     const LISTS = ['IlDen','LaLara','Classici'];
     const LIST_META = { IlDen:{ label:'IlDen', icon:'D' }, LaLara:{ label:'LaLara', icon:'L' }, Classici:{ label:'Classici', icon:'🎞' } };
@@ -489,7 +497,13 @@
     })();
 
     const $ = id => document.getElementById(id);
-    const loadSettings = () => ({...CONFIG, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'))});
+    const loadSettings = () => {
+      let saved = {};
+      try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch {}
+      // i valori vuoti salvati sul telefono non devono cancellare quelli scritti nel file
+      const clean = Object.fromEntries(Object.entries(saved).filter(([,v]) => String(v || '').trim() !== ''));
+      return {...CONFIG, ...clean};
+    };
     const saveSettingsLS = (s) => localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
     let settings = loadSettings();
     let activeList = 'IlDen', searchTerm = '', editingId = null, detailId = null, items = [], remote = null;
@@ -515,28 +529,99 @@
       async reset(){ this.save(structuredClone(seedItems)); }
     };
 
+    const toRow = it => ({ id:it.id, title:it.title, kind:it.kind, list_name:it.list, group_name:it.group, status:it.status, notes:it.notes, together:it.together, poster:it.poster, rating:it.rating||0, poster_tried:!!it.posterTried });
+    const fromRow = r => ({ id:r.id, title:r.title, kind:r.kind, list:r.list_name, group:r.group_name || 'Senza gruppo', status:r.status, notes:r.notes || '', together:!!r.together, poster:r.poster || '', rating:r.rating || 0, posterTried:!!r.poster_tried });
+
+    function setSyncState(state, detail){
+      const el = $('storageMode'); if(!el) return;
+      const map = {
+        cloud:['☁️ Sincronizzato','var(--ok)'],
+        local:['📱 Solo questo telefono','var(--muted)'],
+        error:['⚠️ Cloud non raggiungibile — uso i dati locali','var(--warn)'],
+        syncing:['⏳ Sincronizzo…','var(--accent)']
+      };
+      const [label,color] = map[state] || map.local;
+      el.textContent = detail ? `${label} · ${detail}` : label;
+      el.style.color = color;
+      const badge = $('syncBadge');
+      if(badge){ badge.textContent = state==='cloud' ? '☁️' : state==='error' ? '⚠️' : '📱'; badge.title = el.textContent; }
+    }
+
     async function initRemote(){
       if(!settings.supabaseUrl || !settings.supabaseAnonKey || !window.supabase) return null;
       const client = window.supabase.createClient(settings.supabaseUrl, settings.supabaseAnonKey);
-      $('storageMode').textContent = 'Storage: cloud';
-      return {
+      const api = {
+        client,
         async load(){
           const { data, error } = await client.from('titles').select('*').order('created_at',{ascending:true});
           if(error) throw error;
-          return data.map(r => ({ id:r.id, title:r.title, kind:r.kind, list:r.list_name, group:r.group_name || 'Senza gruppo', status:r.status, notes:r.notes || '', together:!!r.together, poster:r.poster || '', rating:r.rating || 0, posterTried:!!r.poster_tried }));
+          return data.map(fromRow);
         },
-        async upsert(item){
-          const payload = { id:item.id, title:item.title, kind:item.kind, list_name:item.list, group_name:item.group, status:item.status, notes:item.notes, together:item.together, poster:item.poster, rating:item.rating||0, poster_tried:!!item.posterTried };
-          const { error } = await client.from('titles').upsert(payload); if(error) throw error;
-        },
+        async upsert(item){ const { error } = await client.from('titles').upsert(toRow(item)); if(error) throw error; },
         async remove(id){ const { error } = await client.from('titles').delete().eq('id', id); if(error) throw error; },
-        async reset(){ const { error:del } = await client.from('titles').delete().neq('id','00000000-0000-0000-0000-000000000000'); if(del) throw del; const payload = seedItems.map(x=>({id:x.id,title:x.title,kind:x.kind,list_name:x.list,group_name:x.group,status:x.status,notes:x.notes,together:x.together,poster:x.poster,rating:x.rating||0,poster_tried:!!x.posterTried})); const { error:ins } = await client.from('titles').insert(payload); if(ins) throw ins; }
+        async reset(){
+          const { error:del } = await client.from('titles').delete().neq('id','00000000-0000-0000-0000-000000000000'); if(del) throw del;
+          const { error:ins } = await client.from('titles').insert(seedItems.map(toRow)); if(ins) throw ins;
+        },
+        async pushAll(list){
+          if(!list.length) return 0;
+          const { error } = await client.from('titles').upsert(list.map(toRow)); if(error) throw error;
+          return list.length;
+        }
       };
+      // verifica subito che la tabella risponda: se fallisce restiamo in locale
+      await api.load();
+      return api;
+    }
+
+    /* aggiornamento in tempo reale: se Lara modifica, il tuo telefono si aggiorna da solo */
+    let realtimeChannel = null, realtimeTimer = null;
+    function subscribeRealtime(){
+      if(!remote || !remote.client) return;
+      if(realtimeChannel){ try { remote.client.removeChannel(realtimeChannel); } catch {} realtimeChannel = null; }
+      realtimeChannel = remote.client
+        .channel('titles-sync')
+        .on('postgres_changes', { event:'*', schema:'public', table:'titles' }, () => {
+          clearTimeout(realtimeTimer);
+          realtimeTimer = setTimeout(()=>{ if(!document.querySelector('dialog[open]')) refresh().catch(()=>{}); }, 400);
+        })
+        .subscribe();
     }
 
     function adapter(){ return remote || localDb; }
     async function refresh(){ items = remote ? await remote.load() : localDb.load(); render(); }
-    async function loadItems(){ remote = await initRemote().catch(()=>null); try { await refresh(); } catch { remote = null; $('storageMode').textContent = 'Storage: locale (cloud non disponibile)'; await refresh(); } }
+
+    /* al primo collegamento, se il cloud è vuoto carichiamo la lista già presente sul telefono */
+    const MIGRATED_KEY = 'laraden.pushedToCloud.v1';
+    async function seedCloudFromLocalIfEmpty(){
+      if(!remote || localStorage.getItem(MIGRATED_KEY)) return;
+      const local = localDb.load();
+      if(items.length === 0 && local.length > 0){
+        setSyncState('syncing', 'carico la tua lista');
+        await remote.pushAll(local);
+        localStorage.setItem(MIGRATED_KEY, '1');
+        await refresh();
+      } else if(items.length > 0){
+        localStorage.setItem(MIGRATED_KEY, '1');
+      }
+    }
+
+    async function loadItems(){
+      remote = await initRemote().catch(()=>'error');
+      if(remote === 'error'){ remote = null; await refresh(); setSyncState('error'); return; }
+      if(!remote){ await refresh(); setSyncState('local'); return; }
+      await refresh();
+      await seedCloudFromLocalIfEmpty().catch(()=>{});
+      setSyncState('cloud');
+      subscribeRealtime();
+    }
+
+    /* riallineati quando riapri l'app dopo averla lasciata in background */
+    document.addEventListener('visibilitychange', () => {
+      if(document.visibilityState === 'visible' && remote && !document.querySelector('dialog[open]')){
+        refresh().catch(()=>{});
+      }
+    });
 
     function filteredItems(){
       const q = searchTerm.trim().toLowerCase();
@@ -881,6 +966,24 @@
     $('closeSettings').onclick = () => $('settingsDialog').close();
     $('clearRatingBtn').onclick = () => { $('rating').value = 0; renderPopcornPicker(0); $('ratingReadout').textContent = 'Non votato'; };
     $('retryPostersBtn').onclick = () => ensurePosters(true);
+    $('syncBadge').onclick = () => $('settingsDialog').showModal();
+    $('pushLocalBtn').onclick = async () => {
+      const btn = $('pushLocalBtn');
+      if(!remote){ alert('Cloud non collegato: inserisci prima URL e anon key qui sotto, poi salva.'); return; }
+      const local = localDb.load();
+      if(!local.length){ alert('Nessun dato locale da caricare.'); return; }
+      if(!confirm(`Caricare ${local.length} titoli di questo telefono sul cloud?\n\nI titoli già presenti verranno aggiornati con questa versione.`)) return;
+      btn.disabled = true; btn.textContent = 'Carico…';
+      try {
+        const n = await remote.pushAll(local);
+        localStorage.setItem(MIGRATED_KEY, '1');
+        await refresh();
+        btn.textContent = `✅ Caricati ${n} titoli`;
+      } catch(e){
+        btn.textContent = '⚠️ Errore nel caricamento';
+      }
+      setTimeout(()=>{ btn.disabled = false; btn.textContent = '☁️ Carica la lista di questo telefono sul cloud'; }, 2500);
+    };
 
     /* filter sheet */
     $('filterBtn').onclick = () => {
@@ -914,8 +1017,7 @@
       settings = { supabaseUrl:$('supaUrl').value.trim(), supabaseAnonKey:$('supaKey').value.trim(), tmdbToken:$('tmdbToken').value.trim() };
       saveSettingsLS(settings);
       $('settingsDialog').close();
-      remote = await initRemote().catch(()=>null);
-      await refresh();
+      await loadItems();
     };
 
     $('resetSeed').onclick = async () => { await adapter().reset(); await refresh(); ensurePosters(); };
