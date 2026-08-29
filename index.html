@@ -7,14 +7,15 @@
   <title>Lara &amp; Den · Movie Log</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
       --bg:#07070b;--bg2:#0b0c14;--panel:#12131d;--panel2:#171927;--line:#242739;--line-soft:#1c1e2c;
       --text:#f5f6fb;--muted:#8d94ac;--muted2:#666c85;
       --red:#e4262f;--red2:#ff5e57;--gold:#f2bf4b;--gold2:#ffd980;--ok:#31c48d;--warn:#ffb454;--blue:#6aa7ff;
       --shadow:0 16px 34px rgba(0,0,0,.4);--shadow-sm:0 6px 16px rgba(0,0,0,.3);--max:520px;
-      --navh:64px;--ease:cubic-bezier(.16,1,.3,1);
+      --navh:64px;--ease:cubic-bezier(.16,1,.3,1);--accent:#5eead4;--accent2:#8ff5e6;
+      --mono:'JetBrains Mono',ui-monospace,'SF Mono',Consolas,monospace;
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
@@ -50,7 +51,8 @@
     .icon-btn{position:relative;width:38px;height:38px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-size:1rem;cursor:pointer;transition:transform .18s var(--ease),background .18s var(--ease)}
     .icon-btn:active{transform:scale(.88)}
     .icon-btn .dot{position:absolute;top:-2px;right:-2px;width:9px;height:9px;border-radius:50%;background:var(--red2);border:2px solid var(--bg)}
-    .search-bar{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);padding:11px 13px;border-radius:15px;margin-top:11px}
+    .search-bar{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);padding:11px 13px;border-radius:15px;margin-top:11px;transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+    .search-bar:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(94,234,212,.14),0 0 18px rgba(94,234,212,.12)}
     .search-bar span{opacity:.6;font-size:.9rem}
     .search-bar input{width:100%;border:0;outline:0;background:none;color:var(--text);font-size:.92rem}
     .search-bar input::placeholder{color:var(--muted2)}
@@ -58,7 +60,7 @@
     .stat-strip{display:flex;gap:0;margin:11px 0 2px;padding:11px 4px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
     .s-item{flex:1;text-align:center;position:relative}
     .s-item + .s-item::before{content:'';position:absolute;left:0;top:18%;bottom:18%;width:1px;background:var(--line)}
-    .s-item strong{display:block;font-size:1rem;font-weight:800;letter-spacing:-.01em}
+    .s-item strong{display:block;font-family:var(--mono);font-size:1rem;font-weight:700;letter-spacing:-.02em}
     .s-item span{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
 
     /* continue-watching shelf */
@@ -73,7 +75,11 @@
     .group{background:linear-gradient(180deg,rgba(23,25,39,.9),rgba(15,16,25,.9));border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-sm)}
     .group-head{padding:14px 14px 10px;display:grid;gap:8px}
     .group-head h2{margin:0;font-size:.92rem;font-weight:800;letter-spacing:-.01em}
-    .group-head .muted{font-size:.72rem;color:var(--muted);font-weight:600}
+    .group-head .muted{font-size:.7rem;color:var(--muted);font-weight:600;font-family:var(--mono)}
+    .head-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .complete-chip{background:linear-gradient(135deg, rgba(94,234,212,.16), rgba(94,234,212,.05));border:1px solid rgba(94,234,212,.4);color:var(--accent2);font-size:.66rem;font-weight:800;font-family:var(--mono);padding:6px 10px;border-radius:999px;white-space:nowrap;cursor:pointer;transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
+    .complete-chip:active{transform:scale(.95)}
+    .complete-chip:not(:disabled):hover,.complete-chip:not(:disabled):focus-visible{box-shadow:0 0 14px rgba(94,234,212,.3)}
     .progress{height:5px;background:#0f1220;border-radius:999px;overflow:hidden}
     .progress > div{height:100%;background:linear-gradient(90deg,var(--red),var(--gold));width:0%;transition:width .4s ease}
 
@@ -95,13 +101,13 @@
     .badge-status.seen{background:var(--ok)}
     .badge-status.progressing{background:var(--warn)}
     .badge-status.planned{background:var(--blue)}
-    .badge-rating{position:absolute;top:6px;right:6px;background:rgba(8,9,14,.82);backdrop-filter:blur(4px);color:var(--gold2);padding:3px 7px;border-radius:999px;font-size:.66rem;font-weight:800;border:1px solid rgba(255,255,255,.1);z-index:3;display:flex;align-items:center;gap:2px}
+    .badge-rating{position:absolute;top:6px;right:6px;background:rgba(8,9,14,.82);backdrop-filter:blur(4px);color:var(--gold2);padding:3px 7px;border-radius:999px;font-size:.66rem;font-weight:800;font-family:var(--mono);border:1px solid rgba(255,255,255,.1);z-index:3;display:flex;align-items:center;gap:2px}
     .badge-together{position:absolute;bottom:6px;right:6px;font-size:.78rem;z-index:3;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
     .p-title{font-size:.75rem;font-weight:700;line-height:1.2;margin:7px 1px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:1.9em;color:#e7e9f4}
 
     /* bottom nav */
     .bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:35;display:flex;gap:6px;padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:rgba(9,10,16,.86);backdrop-filter:blur(18px);border-top:1px solid rgba(255,255,255,.06)}
-    .nav-indicator{position:absolute;top:0;bottom:0;width:0;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.07);transition:transform .38s var(--ease),width .38s var(--ease);z-index:0;pointer-events:none}
+    .nav-indicator{position:absolute;top:0;bottom:0;width:0;border-radius:16px;background:linear-gradient(180deg,rgba(94,234,212,.09),rgba(94,234,212,.02));border:1px solid rgba(94,234,212,.22);transition:transform .38s var(--ease),width .38s var(--ease);z-index:0;pointer-events:none}
     .nav-items{position:relative;z-index:1;display:flex;gap:6px;flex:1}
     .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px 4px;border-radius:14px;color:var(--muted);font-size:.63rem;font-weight:700;border:0;background:none;cursor:pointer;transition:color .15s}
     .nav-ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--panel2);font-size:.86rem;font-weight:800;color:var(--muted);transition:background .25s var(--ease),color .2s,box-shadow .25s var(--ease),transform .25s var(--ease)}
@@ -123,8 +129,8 @@
     .grid{display:grid;gap:11px}
     .field{display:grid;gap:7px}
     .field label{font-size:.78rem;color:var(--muted);font-weight:700}
-    .field input,.field select,.field textarea{width:100%;background:#0b0c14;color:var(--text);border:1px solid var(--line);padding:12px 13px;border-radius:14px;outline:0;font-size:.92rem}
-    .field input:focus,.field select:focus,.field textarea:focus{border-color:#3b4463}
+    .field input,.field select,.field textarea{width:100%;background:#0b0c14;color:var(--text);border:1px solid var(--line);padding:12px 13px;border-radius:14px;outline:0;font-size:.92rem;transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(94,234,212,.12)}
     .check{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:14px;background:#0d0e17;border:1px solid var(--line)}
     .actions2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
     .btn{min-height:46px;padding:12px 14px;border-radius:15px;background:var(--panel2);color:var(--text);border:1px solid var(--line);font-weight:700;cursor:pointer;font-size:.88rem;transition:transform .15s var(--ease)}
@@ -148,8 +154,19 @@
     .popcorn-picker button.active{opacity:1;filter:drop-shadow(0 0 6px rgba(242,191,75,.55))}
     .popcorn-picker button:active{transform:scale(1.2)}
     .rating-row{display:flex;align-items:center;justify-content:space-between}
-    .rating-readout{font-size:.82rem;color:var(--gold2);font-weight:800}
+    .rating-readout{font-size:.82rem;color:var(--gold2);font-weight:800;font-family:var(--mono)}
     .link-btn{background:none;border:0;color:var(--muted);font-size:.76rem;text-decoration:underline;cursor:pointer;padding:2px 0;justify-self:start}
+
+    /* autocomplete suggestions */
+    .field.has-suggest{position:relative}
+    .suggest-panel{position:absolute;top:calc(100% + 5px);left:0;right:0;background:#0e0f19;border:1px solid rgba(94,234,212,.3);border-radius:14px;overflow:hidden;z-index:8;box-shadow:0 14px 28px rgba(0,0,0,.5),0 0 0 1px rgba(94,234,212,.06)}
+    .suggest-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line-soft);padding:10px 12px;color:var(--text);font-size:.82rem;cursor:pointer}
+    .suggest-row:last-child{border-bottom:0}
+    .suggest-row:active{background:rgba(94,234,212,.08)}
+    .suggest-row span{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .suggest-row small{color:var(--muted);font-size:.68rem;font-family:var(--mono);white-space:nowrap}
+    #franchiseActionWrap{margin-top:-2px}
+    #franchiseActionBtn{background:linear-gradient(135deg, rgba(94,234,212,.16), rgba(94,234,212,.05));border:1px solid rgba(94,234,212,.4);color:var(--accent2);font-family:var(--mono);font-size:.78rem}
 
     /* detail sheet */
     #detailDialog .sheet{position:relative;overflow:hidden}
@@ -235,10 +252,11 @@
     <form class="sheet" id="itemForm" method="dialog">
       <h3>Aggiungi o modifica</h3>
       <div class="grid">
-        <div class="field"><label for="title">Titolo</label><input id="title" required /></div>
+        <div class="field has-suggest"><label for="title">Titolo</label><input id="title" required autocomplete="off" /><div class="suggest-panel" id="titleSuggest" hidden></div></div>
         <div class="field"><label for="kind">Tipo</label><select id="kind"><option value="Film">Film</option><option value="Serie">Serie</option></select></div>
         <div class="field"><label for="list">Categoria</label><select id="list"><option value="IlDen">IlDen</option><option value="LaLara">LaLara</option><option value="Classici">Classici</option></select></div>
-        <div class="field"><label for="group">Franchise / gruppo</label><input id="group" placeholder="Marvel MCU, X-Men, Classici..." /></div>
+        <div class="field has-suggest"><label for="group">Franchise / gruppo</label><input id="group" placeholder="Marvel MCU, X-Men, Alien, Classici..." autocomplete="off" /><div class="suggest-panel" id="groupSuggest" hidden></div></div>
+        <div class="field" id="franchiseActionWrap" hidden><button type="button" class="btn btn-block" id="franchiseActionBtn"></button></div>
         <div class="field"><label for="status">Stato</label><select id="status"><option value="seen">Visto</option><option value="progress">In corso</option><option value="planned">Da vedere</option></select></div>
         <div class="check"><input id="together" type="checkbox" /><label for="together">Visto insieme 💑</label></div>
         <div class="field">
@@ -349,6 +367,121 @@
       { title:'Logan', kind:'Film', list:'IlDen', group:'X-Men', together:true },
       { title:'Stranger Things', kind:'Serie', list:'LaLara', group:'Serie cult', together:false }
     ];
+
+    /* ---------- franchise knowledge base (locale, nessuna API) ---------- */
+    const FRANCHISES = {
+      mcu: { label:'Marvel MCU', aliases:['mcu','marvel cinematic universe','marvel'], titles:[
+        'Iron Man','L\'incredibile Hulk','Iron Man 2','Thor','Captain America - Il primo Vendicatore','The Avengers',
+        'Iron Man 3','Thor - The Dark World','Captain America - The Winter Soldier','Guardiani della Galassia','Avengers - Age of Ultron','Ant-Man',
+        'Captain America - Civil War','Doctor Strange','Guardiani della Galassia Vol. 2','Spider-Man - Homecoming','Thor - Ragnarok','Black Panther','Avengers - Infinity War','Ant-Man and the Wasp','Captain Marvel','Avengers - Endgame','Spider-Man - Far From Home',
+        'Black Widow','Shang-Chi e la leggenda dei Dieci Anelli','Eternals','Spider-Man - No Way Home','Doctor Strange nel Multiverso della Follia','Thor - Love and Thunder','Black Panther - Wakanda Forever',
+        'Ant-Man and the Wasp - Quantumania','Guardiani della Galassia Vol. 3','The Marvels','Deadpool & Wolverine'
+      ]},
+      xmen: { label:'X-Men', aliases:['x men','xmen'], titles:[
+        'X-Men','X2','X-Men - Conflitto finale','X-Men le origini - Wolverine','X-Men - L\'inizio','The Wolverine','X-Men - Giorni di un futuro passato','X-Men Apocalisse','Logan','Deadpool','Deadpool 2','Dark Phoenix','The New Mutants'
+      ]},
+      alien: { label:'Alien', aliases:['alien saga'], titles:[
+        'Alien','Aliens - Scontro finale','Alien 3','Alien - La clonazione','Prometheus','Alien: Covenant','Alien: Romulus'
+      ]},
+      starwars: { label:'Star Wars', aliases:['guerre stellari'], titles:[
+        'Star Wars - Una nuova speranza','L\'Impero colpisce ancora','Il ritorno dello Jedi','La minaccia fantasma','L\'attacco dei cloni','La vendetta dei Sith','Il risveglio della Forza','Rogue One','Gli ultimi Jedi','Solo: A Star Wars Story','L\'ascesa di Skywalker'
+      ]},
+      harrypotter: { label:'Harry Potter', aliases:['hp'], titles:[
+        'Harry Potter e la pietra filosofale','Harry Potter e la camera dei segreti','Harry Potter e il prigioniero di Azkaban','Harry Potter e il calice di fuoco','Harry Potter e l\'ordine della fenice','Harry Potter e il principe mezzosangue','Harry Potter e i doni della morte - Parte 1','Harry Potter e i doni della morte - Parte 2'
+      ]},
+      lotr: { label:'Il Signore degli Anelli', aliases:['signore degli anelli','lotr'], titles:[
+        'Il Signore degli Anelli - La compagnia dell\'anello','Il Signore degli Anelli - Le due torri','Il Signore degli Anelli - Il ritorno del re'
+      ]},
+      hobbit: { label:'Lo Hobbit', aliases:[], titles:[
+        'Lo Hobbit - Un viaggio inaspettato','Lo Hobbit - La desolazione di Smaug','Lo Hobbit - La battaglia delle cinque armate'
+      ]},
+      johnwick: { label:'John Wick', aliases:[], titles:[
+        'John Wick','John Wick Capitolo 2','John Wick Capitolo 3 - Parabellum','John Wick Capitolo 4'
+      ]},
+      jurassic: { label:'Jurassic Park', aliases:['jurassic world'], titles:[
+        'Jurassic Park','Il mondo perduto - Jurassic Park','Jurassic Park III','Jurassic World','Jurassic World - Il regno distrutto','Jurassic World - Il dominio'
+      ]},
+      fastfurious: { label:'Fast & Furious', aliases:['fast and furious'], titles:[
+        'Fast and Furious','2 Fast 2 Furious','Fast & Furious - Tokyo Drift','Fast & Furious','Fast & Furious 5','Fast & Furious 6','Fast & Furious 7','Fast & Furious 8','Fast & Furious 9','Fast X'
+      ]},
+      missionimpossible: { label:'Mission: Impossible', aliases:['mission impossible'], titles:[
+        'Mission: Impossible','Mission: Impossible 2','Mission: Impossible III','Mission: Impossible - Protocollo Fantasma','Mission: Impossible - Rogue Nation','Mission: Impossible - Fallout','Mission: Impossible - Dead Reckoning Parte 1','Mission: Impossible - The Final Reckoning'
+      ]},
+      matrix: { label:'Matrix', aliases:[], titles:[
+        'Matrix','Matrix Reloaded','Matrix Revolutions','Matrix Resurrections'
+      ]},
+      terminator: { label:'Terminator', aliases:[], titles:[
+        'Terminator','Terminator 2 - Il giorno del giudizio','Terminator 3 - Le macchine ribelli','Terminator Salvation','Terminator Genisys','Terminator - Destino Oscuro'
+      ]},
+      rocky: { label:'Rocky & Creed', aliases:['rocky','creed'], titles:[
+        'Rocky','Rocky II','Rocky III','Rocky IV','Rocky V','Rocky Balboa','Creed','Creed II','Creed III'
+      ]},
+      toystory: { label:'Toy Story', aliases:[], titles:[
+        'Toy Story','Toy Story 2','Toy Story 3','Toy Story 4'
+      ]},
+      piratidca: { label:'Pirati dei Caraibi', aliases:['pirates of the caribbean'], titles:[
+        'La maledizione della prima luna','La maledizione del forziere fantasma','Ai confini del mondo','Oltre i confini del mare','La vendetta di Salazar'
+      ]},
+      batman: { label:'Batman', aliases:['dark knight'], titles:[
+        'Batman Begins','Il cavaliere oscuro','Il cavaliere oscuro - Il ritorno','The Batman'
+      ]}
+    };
+
+    function normalize(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(); }
+
+    function fuzzyFranchiseMatches(query){
+      const q = normalize(query);
+      if(!q) return [];
+      return Object.entries(FRANCHISES).filter(([k,v]) => normalize(v.label).includes(q) || v.aliases.some(a=>normalize(a).includes(q))).slice(0,5);
+    }
+    function exactFranchiseMatch(name){
+      const n = normalize(name);
+      if(!n) return null;
+      const hit = Object.entries(FRANCHISES).find(([k,v]) => normalize(v.label)===n || v.aliases.some(a=>normalize(a)===n));
+      return hit ? hit[0] : null;
+    }
+    function missingForFranchise(key){
+      const f = FRANCHISES[key]; if(!f) return [];
+      const have = new Set(items.map(x=>normalize(x.title)));
+      return f.titles.filter(t => !have.has(normalize(t)));
+    }
+    function targetListForFranchise(key, fallback){
+      const f = FRANCHISES[key]; if(!f) return fallback || activeList;
+      const existing = items.find(x => exactFranchiseMatch(x.group) === key);
+      return existing ? existing.list : (fallback || activeList);
+    }
+    async function completeFranchise(key, opts={}){
+      const f = FRANCHISES[key]; if(!f) return 0;
+      const missing = missingForFranchise(key);
+      if(!missing.length) return 0;
+      const list = opts.list || targetListForFranchise(key);
+      for(const title of missing){
+        const payload = { id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()), title, kind:'Film', list, group:f.label, status:'planned', notes:'', together:false, poster:'', rating:0, posterTried:false };
+        await adapter().upsert(payload);
+      }
+      await refresh();
+      ensurePosters();
+      return missing.length;
+    }
+
+    const EXTRA_SUGGESTIONS = [
+      { title:'La La Land', kind:'Film', group:'Classici' }, { title:'Whiplash', kind:'Film', group:'Classici' },
+      { title:'Parasite', kind:'Film', group:'Classici' }, { title:'Joker', kind:'Film', group:'Classici' },
+      { title:'Oppenheimer', kind:'Film', group:'Classici' }, { title:'Pulp Fiction', kind:'Film', group:'Classici' },
+      { title:'Fight Club', kind:'Film', group:'Classici' }, { title:'Forrest Gump', kind:'Film', group:'Classici' },
+      { title:'Il Silenzio degli Innocenti', kind:'Film', group:'Classici' }, { title:'Se7en', kind:'Film', group:'Classici' },
+      { title:'Il Gladiatore', kind:'Film', group:'Classici' }, { title:'C\'era una volta a... Hollywood', kind:'Film', group:'Classici' }
+    ];
+    const SUGGESTION_POOL = (() => {
+      const pool = [
+        ...Object.values(FRANCHISES).flatMap(f => f.titles.map(t => ({ title:t, kind:'Film', group:f.label }))),
+        ...catalogItems.map(c => ({ title:c.title, kind:c.kind, group:c.group })),
+        ...EXTRA_SUGGESTIONS
+      ];
+      const seen = new Set(); const out = [];
+      pool.forEach(p => { const n = normalize(p.title); if(!seen.has(n)){ seen.add(n); out.push(p); } });
+      return out;
+    })();
 
     const $ = id => document.getElementById(id);
     const loadSettings = () => ({...CONFIG, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'))});
@@ -486,6 +619,13 @@
 
     function attachCardHandlers(){
       document.querySelectorAll('[data-open]').forEach(b => b.onclick = ()=>openDetail(b.dataset.open));
+      document.querySelectorAll('[data-complete-franchise]').forEach(b => b.onclick = async (e) => {
+        e.stopPropagation();
+        const key = b.dataset.completeFranchise;
+        b.disabled = true; b.textContent = 'Aggiungo…';
+        const n = await completeFranchise(key);
+        b.textContent = n ? `✅ +${n} aggiunti` : 'Fatto';
+      });
     }
 
     function renderContent(){
@@ -498,7 +638,10 @@
         const groups = grouped(list);
         mainHtml = groups.map(([name, entries]) => {
           const gp = groupProgress(entries);
-          return `<section class="group"><div class="group-head"><h2>${escapeHtml(name)}</h2><div class="muted">${gp.seen}/${gp.total} completati · ${gp.pct}%</div><div class="progress"><div style="width:${gp.pct}%"></div></div></div><div class="grid-cards">${entries.map((it,i)=>cardTemplate(it,i)).join('')}</div></section>`;
+          const fKey = exactFranchiseMatch(name);
+          const missingCount = fKey ? missingForFranchise(fKey).length : 0;
+          const completeBtn = missingCount>0 ? `<button type="button" class="complete-chip" data-complete-franchise="${fKey}">✨ +${missingCount} mancanti</button>` : '';
+          return `<section class="group"><div class="group-head"><div class="head-row"><h2>${escapeHtml(name)}</h2>${completeBtn}</div><div class="muted">${gp.seen}/${gp.total} completati · ${gp.pct}%</div><div class="progress"><div style="width:${gp.pct}%"></div></div></div><div class="grid-cards">${entries.map((it,i)=>cardTemplate(it,i)).join('')}</div></section>`;
         }).join('');
       } else {
         const sorted = [...list].sort((a,b)=>{
@@ -547,11 +690,79 @@
       $('rating').value = r;
       renderPopcornPicker(r);
       $('ratingReadout').textContent = r>0 ? `${r}/10` : 'Non votato';
+      $('titleSuggest').hidden = true; $('groupSuggest').hidden = true;
+      const prefKey = exactFranchiseMatch(prefill.group || '');
+      if(prefKey) showFranchiseAction(prefKey); else $('franchiseActionWrap').hidden = true;
       $('detailDialog').close();
       $('itemDialog').showModal();
     }
 
     function openEdit(id){ const item = items.find(x=>x.id===id); if(item) openNew(item); }
+
+    /* ---------- autocomplete: titolo & franchise ---------- */
+    function showFranchiseAction(key){
+      const wrap = $('franchiseActionWrap'); const btn = $('franchiseActionBtn');
+      const missing = missingForFranchise(key);
+      if(!missing.length){ wrap.hidden = true; return; }
+      wrap.hidden = false;
+      btn.disabled = false;
+      btn.textContent = `✨ Aggiungi tutti i film mancanti di ${FRANCHISES[key].label} (${missing.length})`;
+      btn.onclick = async () => {
+        btn.disabled = true; btn.textContent = 'Aggiungo…';
+        const n = await completeFranchise(key, { list: $('list').value });
+        btn.textContent = `✅ Aggiunti ${n} titoli`;
+        setTimeout(()=>{ wrap.hidden = true; }, 1600);
+      };
+    }
+
+    function renderGroupSuggestions(query){
+      const panel = $('groupSuggest');
+      const matches = fuzzyFranchiseMatches(query);
+      if(!matches.length){ panel.hidden = true; panel.innerHTML = ''; return; }
+      panel.hidden = false;
+      panel.innerHTML = matches.map(([k,v]) => `<button type="button" class="suggest-row" data-franchise="${k}">🎬 <span>${escapeHtml(v.label)}</span><small>${v.titles.length} titoli</small></button>`).join('');
+      panel.querySelectorAll('[data-franchise]').forEach(btn => {
+        btn.onclick = () => {
+          const key = btn.dataset.franchise;
+          $('group').value = FRANCHISES[key].label;
+          panel.hidden = true;
+          showFranchiseAction(key);
+        };
+      });
+    }
+
+    function renderTitleSuggestions(query){
+      const panel = $('titleSuggest');
+      const q = normalize(query);
+      if(q.length < 2){ panel.hidden = true; panel.innerHTML = ''; return; }
+      const have = new Set(items.map(x=>normalize(x.title)));
+      const matches = SUGGESTION_POOL.filter(s => normalize(s.title).includes(q) && !have.has(normalize(s.title))).slice(0,6);
+      if(!matches.length){ panel.hidden = true; panel.innerHTML = ''; return; }
+      panel.hidden = false;
+      panel.innerHTML = matches.map((s,i) => `<button type="button" class="suggest-row" data-idx="${i}">🎬 <span>${escapeHtml(s.title)}</span><small>${escapeHtml(s.group || s.kind)}</small></button>`).join('');
+      panel.querySelectorAll('[data-idx]').forEach(btn => {
+        btn.onclick = () => {
+          const s = matches[Number(btn.dataset.idx)];
+          $('title').value = s.title;
+          $('kind').value = s.kind || 'Film';
+          if(!$('group').value.trim() && s.group){
+            $('group').value = s.group;
+            const key = exactFranchiseMatch(s.group);
+            if(key) showFranchiseAction(key);
+          }
+          panel.hidden = true;
+        };
+      });
+    }
+
+    $('title').addEventListener('input', e => renderTitleSuggestions(e.target.value));
+    $('title').addEventListener('blur', () => setTimeout(()=>{ $('titleSuggest').hidden = true; }, 150));
+    $('group').addEventListener('input', e => renderGroupSuggestions(e.target.value));
+    $('group').addEventListener('blur', () => setTimeout(()=>{ $('groupSuggest').hidden = true; }, 150));
+    $('group').addEventListener('change', e => {
+      const key = exactFranchiseMatch(e.target.value);
+      if(key) showFranchiseAction(key); else $('franchiseActionWrap').hidden = true;
+    });
 
     /* ---------- detail sheet ---------- */
     function renderDetailPopcorn(value){
