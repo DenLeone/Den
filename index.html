@@ -164,7 +164,8 @@
 
     /* autocomplete suggestions */
     .field.has-suggest{position:relative}
-    .suggest-panel{position:absolute;top:calc(100% + 5px);left:0;right:0;background:#0e0f19;border:1px solid rgba(94,234,212,.3);border-radius:14px;overflow:hidden;z-index:8;box-shadow:0 14px 28px rgba(0,0,0,.5),0 0 0 1px rgba(94,234,212,.06)}
+    .suggest-panel{position:absolute;top:calc(100% + 5px);left:0;right:0;background:#0e0f19;border:1px solid rgba(94,234,212,.3);border-radius:14px;overflow-y:auto;max-height:238px;z-index:8;box-shadow:0 14px 28px rgba(0,0,0,.5),0 0 0 1px rgba(94,234,212,.06);overscroll-behavior:contain}
+    .suggest-head{padding:8px 12px;font-size:.66rem;font-family:var(--mono);color:var(--muted);border-bottom:1px solid var(--line-soft);position:sticky;top:0;background:#0e0f19}
     .suggest-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line-soft);padding:10px 12px;color:var(--text);font-size:.82rem;cursor:pointer}
     .suggest-row:last-child{border-bottom:0}
     .suggest-row:active{background:rgba(94,234,212,.08)}
@@ -261,7 +262,7 @@
         <div class="field has-suggest"><label for="title">Titolo</label><input id="title" required autocomplete="off" /><div class="suggest-panel" id="titleSuggest" hidden></div></div>
         <div class="field"><label for="kind">Tipo</label><select id="kind"><option value="Film">Film</option><option value="Serie">Serie</option></select></div>
         <div class="field"><label for="list">Categoria</label><select id="list"><option value="IlDen">IlDen</option><option value="LaLara">LaLara</option><option value="Classici">Classici</option></select></div>
-        <div class="field has-suggest"><label for="group">Franchise / gruppo</label><input id="group" placeholder="Marvel MCU, X-Men, Alien, Classici..." autocomplete="off" /><div class="suggest-panel" id="groupSuggest" hidden></div></div>
+        <div class="field has-suggest"><label for="group">Franchise / gruppo</label><input id="group" placeholder="Tocca per vedere i franchise disponibili" autocomplete="off" /><div class="suggest-panel" id="groupSuggest" hidden></div></div>
         <div class="field" id="franchiseActionWrap" hidden><button type="button" class="btn btn-block" id="franchiseActionBtn"></button></div>
         <div class="field"><label for="status">Stato</label><select id="status"><option value="seen">Visto</option><option value="progress">In corso</option><option value="planned">Da vedere</option></select></div>
         <div class="check"><input id="together" type="checkbox" /><label for="together">Visto insieme 💑</label></div>
@@ -437,6 +438,96 @@
       ]},
       batman: { label:'Batman', aliases:['dark knight'], titles:[
         'Batman Begins','Il cavaliere oscuro','Il cavaliere oscuro - Il ritorno','The Batman'
+      ]},
+      predator: { label:'Predator', aliases:['predators'], titles:[
+        'Predator','Predator 2','Predators','The Predator','Prey','Predator: Badlands'
+      ]},
+      avp: { label:'Alien vs Predator', aliases:['avp'], titles:[
+        'Alien vs. Predator','Aliens vs. Predator 2'
+      ]},
+      dceu: { label:'DC Universe', aliases:['dc','dceu','justice league'], titles:[
+        'L\'uomo d\'acciaio','Batman v Superman - Dawn of Justice','Suicide Squad','Wonder Woman','Justice League','Aquaman','Shazam!','Birds of Prey','Wonder Woman 1984','Zack Snyder\'s Justice League','The Suicide Squad - Missione suicida','Black Adam','Shazam! Furia degli dei','The Flash','Blue Beetle','Aquaman e il regno perduto'
+      ]},
+      indianajones: { label:'Indiana Jones', aliases:[], titles:[
+        'I predatori dell\'arca perduta','Indiana Jones e il tempio maledetto','Indiana Jones e l\'ultima crociata','Indiana Jones e il regno del teschio di cristallo','Indiana Jones e il quadrante del destino'
+      ]},
+      bond: { label:'James Bond 007', aliases:['007','james bond'], titles:[
+        'Agente 007 - Licenza di uccidere','Agente 007 - Dalla Russia con amore','Agente 007 - Missione Goldfinger','Agente 007 - Thunderball: Operazione tuono','Agente 007 - Si vive solo due volte','Agente 007 - Al servizio segreto di Sua Maestà','Agente 007 - Una cascata di diamanti','Agente 007 - Vivi e lascia morire','Agente 007 - L\'uomo dalla pistola d\'oro','La spia che mi amava','Moonraker - Operazione spazio','Solo per i tuoi occhi','Octopussy - Operazione piovra','007 Bersaglio mobile','007 Zona pericolo','007 Vendetta privata','GoldenEye','Il domani non muore mai','Il mondo non basta','La morte può attendere','Casino Royale','Quantum of Solace','Skyfall','Spectre','No Time to Die'
+      ]},
+      spiderman: { label:'Spider-Man (Raimi & Webb)', aliases:['spiderman','uomo ragno'], titles:[
+        'Spider-Man','Spider-Man 2','Spider-Man 3','The Amazing Spider-Man','The Amazing Spider-Man 2 - Il potere di Electro'
+      ]},
+      hungergames: { label:'Hunger Games', aliases:[], titles:[
+        'Hunger Games','Hunger Games: La ragazza di fuoco','Hunger Games: Il canto della rivolta - Parte 1','Hunger Games: Il canto della rivolta - Parte 2','Hunger Games: La ballata dell\'usignolo e del serpente'
+      ]},
+      ritornofuturo: { label:'Ritorno al futuro', aliases:['back to the future'], titles:[
+        'Ritorno al futuro','Ritorno al futuro - Parte II','Ritorno al futuro - Parte III'
+      ]},
+      padrino: { label:'Il Padrino', aliases:['godfather'], titles:[
+        'Il padrino','Il padrino - Parte II','Il padrino - Parte III'
+      ]},
+      rambo: { label:'Rambo', aliases:[], titles:[
+        'Rambo','Rambo 2 - La vendetta','Rambo III','John Rambo','Rambo: Last Blood'
+      ]},
+      diehard: { label:'Die Hard', aliases:['trappola di cristallo'], titles:[
+        'Trappola di cristallo','58 minuti per morire - Die Harder','Die Hard - Duri a morire','Die Hard - Vivere o morire','Die Hard - Un buon giorno per morire'
+      ]},
+      madmax: { label:'Mad Max', aliases:['interceptor'], titles:[
+        'Interceptor','Interceptor - Il guerriero della strada','Mad Max - Oltre la sfera del tuono','Mad Max: Fury Road','Furiosa: A Mad Max Saga'
+      ]},
+      scimmie: { label:'Il pianeta delle scimmie', aliases:['planet of the apes'], titles:[
+        'L\'alba del pianeta delle scimmie','Apes Revolution - Il pianeta delle scimmie','The War - Il pianeta delle scimmie','Il regno del pianeta delle scimmie'
+      ]},
+      monsterverse: { label:'Godzilla & Kong', aliases:['monsterverse','godzilla','king kong'], titles:[
+        'Godzilla','Kong: Skull Island','Godzilla II - King of the Monsters','Godzilla vs. Kong','Godzilla e Kong - Il nuovo impero'
+      ]},
+      transformers: { label:'Transformers', aliases:[], titles:[
+        'Transformers','Transformers - La vendetta del caduto','Transformers 3','Transformers 4 - L\'era dell\'estinzione','Transformers - L\'ultimo cavaliere','Bumblebee','Transformers - Il risveglio'
+      ]},
+      bourne: { label:'Jason Bourne', aliases:['bourne'], titles:[
+        'The Bourne Identity','The Bourne Supremacy','The Bourne Ultimatum - Il ritorno dello sciacallo','The Bourne Legacy','Jason Bourne'
+      ]},
+      mib: { label:'Men in Black', aliases:['mib'], titles:[
+        'Men in Black','Men in Black II','Men in Black 3','Men in Black: International'
+      ]},
+      ghostbusters: { label:'Ghostbusters', aliases:['acchiappafantasmi'], titles:[
+        'Ghostbusters - Acchiappafantasmi','Ghostbusters II','Ghostbusters (2016)','Ghostbusters: Legacy','Ghostbusters: Minaccia glaciale'
+      ]},
+      oceans: { label:'Ocean\'s', aliases:[], titles:[
+        'Ocean\'s Eleven','Ocean\'s Twelve','Ocean\'s Thirteen','Ocean\'s 8'
+      ]},
+      jumanji: { label:'Jumanji', aliases:[], titles:[
+        'Jumanji','Jumanji - Benvenuti nella giungla','Jumanji - The Next Level'
+      ]},
+      narnia: { label:'Le cronache di Narnia', aliases:['narnia'], titles:[
+        'Le cronache di Narnia - Il leone, la strega e l\'armadio','Le cronache di Narnia - Il principe Caspian','Le cronache di Narnia - Il viaggio del veliero'
+      ]},
+      twilight: { label:'Twilight', aliases:[], titles:[
+        'Twilight','The Twilight Saga: New Moon','The Twilight Saga: Eclipse','The Twilight Saga: Breaking Dawn - Parte 1','The Twilight Saga: Breaking Dawn - Parte 2'
+      ]},
+      scream: { label:'Scream', aliases:[], titles:[
+        'Scream','Scream 2','Scream 3','Scream 4','Scream (2022)','Scream VI'
+      ]},
+      conjuring: { label:'The Conjuring', aliases:['evocazione','annabelle'], titles:[
+        'L\'evocazione - The Conjuring','The Conjuring - Il caso Enfield','The Conjuring - Per ordine del diavolo','Annabelle','Annabelle 2 - Creation','Annabelle 3'
+      ]},
+      shrek: { label:'Shrek', aliases:[], titles:[
+        'Shrek','Shrek 2','Shrek terzo','Shrek e vissero felici e contenti'
+      ]},
+      cattivissimo: { label:'Cattivissimo me & Minions', aliases:['minions','despicable me'], titles:[
+        'Cattivissimo me','Cattivissimo me 2','Minions','Cattivissimo me 3','Minions - Come Gru diventa cattivissimo','Cattivissimo me 4'
+      ]},
+      eraglaciale: { label:'L\'era glaciale', aliases:['ice age'], titles:[
+        'L\'era glaciale','L\'era glaciale 2 - Il disgelo','L\'era glaciale 3 - L\'alba dei dinosauri','L\'era glaciale 4 - Continenti alla deriva','L\'era glaciale - In rotta di collisione'
+      ]},
+      dragontrainer: { label:'Dragon Trainer', aliases:['how to train your dragon'], titles:[
+        'Dragon Trainer','Dragon Trainer 2','Dragon Trainer - Il mondo nascosto'
+      ]},
+      kungfupanda: { label:'Kung Fu Panda', aliases:[], titles:[
+        'Kung Fu Panda','Kung Fu Panda 2','Kung Fu Panda 3','Kung Fu Panda 4'
+      ]},
+      sherlock: { label:'Sherlock Holmes', aliases:[], titles:[
+        'Sherlock Holmes','Sherlock Holmes - Gioco di ombre'
       ]}
     };
 
@@ -444,8 +535,9 @@
 
     function fuzzyFranchiseMatches(query){
       const q = normalize(query);
-      if(!q) return [];
-      return Object.entries(FRANCHISES).filter(([k,v]) => normalize(v.label).includes(q) || v.aliases.some(a=>normalize(a).includes(q))).slice(0,5);
+      const all = Object.entries(FRANCHISES).sort((a,b)=>a[1].label.localeCompare(b[1].label,'it'));
+      if(!q) return all; // campo vuoto: mostra tutto il catalogo disponibile
+      return all.filter(([k,v]) => normalize(v.label).includes(q) || v.aliases.some(a=>normalize(a).includes(q)));
     }
     function exactFranchiseMatch(name){
       const n = normalize(name);
@@ -830,9 +922,14 @@
     function renderGroupSuggestions(query){
       const panel = $('groupSuggest');
       const matches = fuzzyFranchiseMatches(query);
-      if(!matches.length){ panel.hidden = true; panel.innerHTML = ''; return; }
+      if(!matches.length){
+        panel.hidden = false;
+        panel.innerHTML = `<div class="suggest-head">Nessun franchise trovato — scrivi pure un nome tuo</div>`;
+        return;
+      }
       panel.hidden = false;
-      panel.innerHTML = matches.map(([k,v]) => `<button type="button" class="suggest-row" data-franchise="${k}">🎬 <span>${escapeHtml(v.label)}</span><small>${v.titles.length} titoli</small></button>`).join('');
+      const head = `<div class="suggest-head">${matches.length} franchise disponibili</div>`;
+      panel.innerHTML = head + matches.map(([k,v]) => `<button type="button" class="suggest-row" data-franchise="${k}">🎬 <span>${escapeHtml(v.label)}</span><small>${v.titles.length} titoli</small></button>`).join('');
       panel.querySelectorAll('[data-franchise]').forEach(btn => {
         btn.onclick = () => {
           const key = btn.dataset.franchise;
@@ -870,6 +967,7 @@
     $('title').addEventListener('input', e => renderTitleSuggestions(e.target.value));
     $('title').addEventListener('blur', () => setTimeout(()=>{ $('titleSuggest').hidden = true; }, 150));
     $('group').addEventListener('input', e => renderGroupSuggestions(e.target.value));
+    $('group').addEventListener('focus', e => renderGroupSuggestions(e.target.value));
     $('group').addEventListener('blur', () => setTimeout(()=>{ $('groupSuggest').hidden = true; }, 150));
     $('group').addEventListener('change', e => {
       const key = exactFranchiseMatch(e.target.value);
