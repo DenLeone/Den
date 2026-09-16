@@ -1,0 +1,15 @@
+{
+  "name": "Lara & Den · Cinema",
+  "short_name": "Lara & Den",
+  "description": "Il diario dei film di Lara e Den: cosa avete visto, cosa vi manca, cosa guardare stasera.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07080b",
+  "theme_color": "#07080b",
+  "lang": "it",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

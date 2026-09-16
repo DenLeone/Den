@@ -44,6 +44,20 @@ create policy "accesso pubblico" on public.titles
 alter publication supabase_realtime add table public.titles;
 ```
 
+### Facoltativo: far viaggiare anche anno, trama e sfondi
+
+L'app funziona senza. Se aggiungi queste tre colonne, però, anno / trama /
+immagine di sfondo vengono salvati una volta sola e arrivano già pronti anche
+sull'altro telefono, invece di essere ricercati da capo su ogni dispositivo:
+
+```sql
+alter table public.titles add column if not exists year     integer;
+alter table public.titles add column if not exists overview text;
+alter table public.titles add column if not exists backdrop text;
+```
+
+L'app si accorge da sola se ci sono: non serve configurare niente.
+
 ## 3. Copia le due chiavi
 
 Menu a sinistra → **Project Settings** → **API**. Servono:
