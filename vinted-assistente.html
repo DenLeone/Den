@@ -16,184 +16,221 @@
   label{display:block;font-size:13px;color:var(--mut);margin:8px 0 3px}
   input,select,textarea{width:100%;padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
   textarea{min-height:90px;resize:vertical}
-  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
   button,a.btn{display:inline-block;padding:9px 14px;border:0;border-radius:8px;background:var(--ac);color:#fff;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;margin:6px 6px 0 0}
   button.sec,a.btn.sec{background:transparent;color:var(--tx);border:1px solid var(--bd)}
   button:disabled{opacity:.5;cursor:wait}
-  #drop{border:2px dashed var(--bd);border-radius:12px;padding:24px;text-align:center;color:var(--mut);cursor:pointer}
+  #drop{border:2px dashed var(--bd);border-radius:12px;padding:20px;text-align:center;color:var(--mut);cursor:pointer}
   #drop.over{border-color:var(--ac)}
   #thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-  #thumbs img{width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)}
-  .big{font-size:28px;font-weight:700;color:var(--ac)}
+  #thumbs img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid var(--bd);cursor:pointer}
+  #thumbs img.sel{border-color:var(--ac)}
+  .big{font-size:30px;font-weight:700;color:var(--ac)}
   .mut{color:var(--mut);font-size:13px}
-  #status{white-space:pre-wrap}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left}
   .hidden{display:none}
 </style>
 </head>
 <body>
 <main>
-<h1>Assistente Vinted: titolo, prezzo e descrizione</h1>
+<h1>Assistente Vinted &ndash; carte Pokémon gradate</h1>
+<p class="mut">Senza AI e senza chiavi: compili i dati della carta (o li fai leggere dalla foto), apri le ricerche dei venduti, incolli il testo della pagina e il programma calcola il prezzo.</p>
 
 <div class="card">
-  <h2>1. Chiave API Gemini</h2>
-  <input id="key" type="password" placeholder="AIza..." autocomplete="off">
-  <p class="mut">Resta solo nel tuo browser (localStorage). Si crea gratis su aistudio.google.com/apikey. Serve per riconoscere l'articolo dalle foto e cercare i prezzi sul web.</p>
-</div>
-
-<div class="card">
-  <h2>2. Foto e specifiche</h2>
-  <div id="drop">Trascina qui le foto (o clicca) &ndash; max 6</div>
+  <h2>1. Foto (opzionale, serve solo per leggere l'etichetta)</h2>
+  <div id="drop">Trascina qui le foto (o clicca). Clicca una miniatura per sceglierla.</div>
   <input id="files" type="file" accept="image/*" multiple class="hidden">
   <div id="thumbs"></div>
-  <div class="row">
-    <div><label>Marca</label><input id="brand"></div>
-    <div><label>Modello / nome</label><input id="model"></div>
-    <div><label>Tipo articolo</label>
-      <select id="cat"><option value="carta Pokémon gradata (slab)" selected>Carta Pokémon gradata</option><option value="">Altro (abbigliamento, ecc.)</option></select></div>
-    <div><label>Società di grading</label><input id="grader" placeholder="PSA, Graad, Akatsu, TOT..."></div>
-    <div><label>Voto</label><input id="grade" placeholder="10, 9.5..."></div>
-    <div><label>Lingua</label><input id="lang" placeholder="vuoto = automatica dalla carta"></div>
-    <div><label>Taglia / misure</label><input id="size"></div>
-    <div><label>Colore</label><input id="color"></div>
-    <div><label>Condizione</label>
-      <select id="cond"><option>Nuovo con cartellino</option><option>Nuovo senza cartellino</option><option selected>Ottime condizioni</option><option>Buone condizioni</option><option>Condizioni accettabili</option></select></div>
-  </div>
-  <label>Note (difetti, materiale, anno, ecc.)</label>
-  <textarea id="notes"></textarea>
-  <button id="go">Analizza e suggerisci</button>
-  <div id="status" class="mut"></div>
-</div>
-
-<div id="out" class="card hidden">
-  <h2>3. Risultato</h2>
-  <label>Titolo</label>
-  <input id="rTitle">
-  <button class="sec" data-copy="rTitle">Copia titolo</button>
-  <label>Prezzo consigliato</label>
-  <div class="big"><span id="rPrice"></span></div>
-  <div class="mut" id="rRange"></div>
-  <label>Descrizione</label>
-  <textarea id="rDesc" style="min-height:220px"></textarea>
-  <button class="sec" data-copy="rDesc">Copia descrizione</button>
-  <div id="comps"></div>
+  <button class="sec" id="ocr" disabled>Leggi etichetta dalla foto selezionata</button>
+  <span class="mut" id="ocrStatus"></span>
 </div>
 
 <div class="card">
-  <h2>Controlla i venduti a mano</h2>
-  <p class="mut">eBay e Vinted non permettono di leggere i risultati da una pagina HTML locale: questi link aprono la ricerca già pronta. Incolla poi i prezzi per calcolare la mediana.</p>
+  <h2>2. Dati della carta</h2>
+  <div class="row">
+    <div><label>Nome carta</label><input id="nome" placeholder="Galarian Articuno"></div>
+    <div><label>Numero</label><input id="num" placeholder="182/172"></div>
+    <div><label>Set / espansione</label><input id="set" placeholder="VSTAR Universe"></div>
+    <div><label>Anno</label><input id="anno"></div>
+    <div><label>Rarità</label><input id="rar" placeholder="AR, SR, MA..."></div>
+    <div><label>Lingua</label>
+      <select id="lang"><option>JPN</option><option>ENG</option><option>KOR</option><option>CHN</option><option>ITA</option><option>FRA</option><option>DEU</option><option>ESP</option></select></div>
+    <div><label>Società di grading</label>
+      <select id="grader"><option>PSA</option><option>Graad</option><option>Akatsu</option><option>TOT</option><option>CGC</option><option>BGS</option><option>Altra</option></select></div>
+    <div><label>Voto</label><input id="grade" placeholder="10, 9.5..."></div>
+    <div><label>Certificato</label><input id="cert"></div>
+  </div>
+  <label>Note aggiuntive (opzionale)</label>
+  <input id="notes" placeholder="es. slab senza graffi">
+</div>
+
+<div class="card">
+  <h2>3. Controlla i venduti</h2>
   <a class="btn sec" id="lEbay" target="_blank" rel="noopener">eBay venduti</a>
-  <a class="btn sec" id="lVinted" target="_blank" rel="noopener">Vinted (più recenti)</a>
-  <label>Prezzi trovati (separati da spazio, virgola o a capo)</label>
-  <textarea id="prices" placeholder="12 15 14,50 18"></textarea>
+  <a class="btn sec" id="lEbayAll" target="_blank" rel="noopener">eBay venduti (senza società)</a>
+  <a class="btn sec" id="lVinted" target="_blank" rel="noopener">Vinted</a>
+  <a class="btn sec" id="lPc" target="_blank" rel="noopener">PriceCharting</a>
+  <a class="btn sec" id="lCm" target="_blank" rel="noopener">Cardmarket</a>
+  <p class="mut">Nella pagina eBay dei venduti premi Ctrl+A, Ctrl+C e incolla qui sotto: il programma estrae i prezzi da solo (ignora le spedizioni). Puoi incollare anche più pagine o scrivere prezzi a mano.</p>
+  <textarea id="paste" placeholder="Incolla qui il testo della pagina o i prezzi (es. 45 52,50 48)"></textarea>
+  <div class="row">
+    <div><label>Sconto sulla mediana (%)</label><input id="disc" type="number" value="5" min="0" max="50"></div>
+  </div>
   <button id="calc">Calcola prezzo</button>
   <div id="calcOut" class="mut"></div>
 </div>
+
+<div class="card">
+  <h2>4. Risultato</h2>
+  <label>Titolo <span id="tlen"></span></label>
+  <input id="rTitle">
+  <button class="sec" data-copy="rTitle">Copia titolo</button>
+  <label>Prezzo consigliato</label>
+  <div class="big"><span id="rPrice">&ndash;</span></div>
+  <label>Descrizione</label>
+  <textarea id="rDesc" style="min-height:260px"></textarea>
+  <button class="sec" data-copy="rDesc">Copia descrizione</button>
+  <button class="sec" id="reset">Nuova carta</button>
+</div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
-const SHIPPING = "📦 Spedizione con InPost il giorno successivo all'acquisto.\nL'articolo sarà accuratamente imballato per arrivare in perfette condizioni.\n\nPer qualsiasi domanda o per altre foto scrivimi pure! Controlla anche gli altri miei articoli: sconto sui pacchetti.";
-let images = []; // {dataUrl}
+const F = ['nome','num','set','anno','rar','lang','grader','grade','cert','notes'];
+const SHIPPING = "📦 Spedizione con InPost il giorno successivo all'acquisto.\nL'articolo sarà accuratamente imballato per arrivare in perfette condizioni.\nLo stand visibile nelle foto è solo scenografico e non è incluso.\n\nPer qualsiasi domanda o altre foto scrivimi pure! Controlla anche gli altri miei articoli: sconto sui pacchetti.";
+let images = [], sel = -1;
 
-try { $('key').value = localStorage.getItem('gk') || ''; } catch(e){}
-$('key').addEventListener('change', () => { try { localStorage.setItem('gk', $('key').value.trim()); } catch(e){} });
+// ---------- titolo / descrizione ----------
+const v = id => $(id).value.trim();
+function buildTitle(){
+  const slab = [v('grader'), v('grade')].filter(Boolean).join(' ');
+  const opts = [
+    [v('nome'), v('num'), v('set'), slab, v('lang')],
+    [v('nome'), v('num'), slab, v('lang')],
+    [v('nome'), v('num'), slab],
+  ].map(a => a.filter(Boolean).join(' '));
+  return opts.find(t => t.length <= 60) || opts[2].slice(0, 60);
+}
+function buildDesc(){
+  const L = [];
+  L.push(`${[v('nome'), v('num')].filter(Boolean).join(' ')}${v('set') ? ' – ' + v('set') : ''}`);
+  L.push(`Carta Pokémon ${v('lang')} gradata ${[v('grader'), v('grade')].filter(Boolean).join(' ')}.`, '');
+  if (v('set')) L.push(`• Set: ${v('set')}${v('anno') ? ' (' + v('anno') + ')' : ''}`);
+  if (v('num')) L.push(`• Numero: ${v('num')}${v('rar') ? ' ' + v('rar') : ''}`);
+  L.push(`• Lingua: ${v('lang')}`);
+  L.push(`• Grading: ${v('grader')} ${v('grade')}`);
+  if (v('cert')) L.push(`• Certificato: ${v('cert')}`);
+  if (v('notes')) L.push(`• ${v('notes')}`);
+  return L.join('\n') + '\n\n' + SHIPPING;
+}
+function refresh(){
+  $('rTitle').value = buildTitle(); $('tlen').textContent = `(${$('rTitle').value.length}/60)`;
+  $('rDesc').value = buildDesc();
+  const q = [v('nome'), v('num'), v('grader'), v('grade')].filter(Boolean).join(' ');
+  const q2 = [v('nome'), v('num')].filter(Boolean).join(' ');
+  const e = encodeURIComponent;
+  $('lEbay').href = `https://www.ebay.it/sch/i.html?_nkw=${e(q)}&LH_Sold=1&LH_Complete=1&_sop=13`;
+  $('lEbayAll').href = `https://www.ebay.it/sch/i.html?_nkw=${e(q2 + ' ' + v('lang'))}&LH_Sold=1&LH_Complete=1&_sop=13`;
+  $('lVinted').href = `https://www.vinted.it/catalog?search_text=${e(q)}&order=newest_first`;
+  $('lPc').href = `https://www.pricecharting.com/search-products?type=prices&q=${e(q2)}`;
+  $('lCm').href = `https://www.cardmarket.com/it/Pokemon/Products/Search?searchString=${e(q2)}`;
+}
+F.forEach(i => $(i).addEventListener('input', refresh)); refresh();
+$('rTitle').addEventListener('input', () => $('tlen').textContent = `(${$('rTitle').value.length}/60)`);
 
-// --- foto ---
+// ---------- prezzi ----------
+function parseNum(s){
+  s = s.replace(/\s/g, '');
+  if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');   // 1.250,00
+  else s = s.replace(/,/g, '');                                          // 1,250.00
+  return parseFloat(s);
+}
+function extractPrices(text){
+  const out = [];
+  text.split('\n').forEach(line => {
+    if (/spedizion|consegna|shipping|postage|dogana|import/i.test(line)) return;
+    const money = /(?:EUR|€|\$|USD|£|GBP)\s*(\d[\d.,]*)|(\d[\d.,]*)\s*(?:EUR|€)/gi;
+    let m, found = false;
+    while ((m = money.exec(line))) { const n = parseNum(m[1] || m[2]); if (n > 0) { out.push(n); found = true; } }
+    if (!found && /^[\s\d.,;]+$/.test(line)) line.split(/[\s;]+/).forEach(t => { const n = parseNum(t); if (n > 0) out.push(n); });
+  });
+  return out;
+}
+function stats(a){
+  a = [...a].sort((x, y) => x - y);
+  const q = p => { const i = (a.length - 1) * p, lo = Math.floor(i); return a[lo] + (a[Math.ceil(i)] - a[lo]) * (i - lo); };
+  if (a.length >= 5) { const q1 = q(.25), q3 = q(.75), k = 1.5 * (q3 - q1); a = a.filter(x => x >= q1 - k && x <= q3 + k); }
+  const med = a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+  return {n: a.length, min: a[0], max: a[a.length - 1], med};
+}
+$('calc').onclick = () => {
+  const raw = extractPrices($('paste').value);
+  if (!raw.length) return $('calcOut').textContent = 'Nessun prezzo trovato.';
+  const s = stats(raw), p = Math.round(s.med * (1 - (+$('disc').value || 0) / 100));
+  $('calcOut').innerHTML = `Trovati ${raw.length} prezzi, usati ${s.n} (esclusi gli estremi anomali).<br>Min ${s.min.toFixed(2)} · Mediana <b>${s.med.toFixed(2)}</b> · Max ${s.max.toFixed(2)} €<br>Consigliato: <b>${p} €</b>`;
+  $('rPrice').textContent = p + ' €';
+};
+
+// ---------- foto + OCR ----------
 $('drop').onclick = () => $('files').click();
 $('drop').ondragover = e => { e.preventDefault(); $('drop').classList.add('over'); };
 $('drop').ondragleave = () => $('drop').classList.remove('over');
 $('drop').ondrop = e => { e.preventDefault(); $('drop').classList.remove('over'); addFiles(e.dataTransfer.files); };
 $('files').onchange = e => addFiles(e.target.files);
-
 function addFiles(list){
-  [...list].filter(f => f.type.startsWith('image/')).slice(0, 6 - images.length).forEach(f => {
-    const img = new Image(), url = URL.createObjectURL(f);
+  [...list].filter(f => f.type.startsWith('image/')).forEach(f => {
+    const url = URL.createObjectURL(f), img = new Image();
     img.onload = () => {
-      const s = Math.min(1, 1024 / Math.max(img.width, img.height));
-      const c = document.createElement('canvas');
+      const c = document.createElement('canvas'), s = Math.min(1, 1600 / Math.max(img.width, img.height));
       c.width = img.width * s; c.height = img.height * s;
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      const dataUrl = c.toDataURL('image/jpeg', .8);
-      images.push(dataUrl);
-      const t = document.createElement('img'); t.src = dataUrl; $('thumbs').appendChild(t);
+      images.push(c);
+      const t = document.createElement('img'), i = images.length - 1; t.src = c.toDataURL('image/jpeg', .6);
+      t.onclick = () => select(i); t.dataset.i = i; $('thumbs').appendChild(t);
+      if (sel < 0) select(i);
       URL.revokeObjectURL(url);
     };
     img.src = url;
   });
 }
+function select(i){ sel = i; [...$('thumbs').children].forEach(t => t.classList.toggle('sel', +t.dataset.i === i)); $('ocr').disabled = false; }
 
-// --- link ricerca ---
-function query(extra){ return [$('brand').value, $('model').value, extra||''].join(' ').trim().replace(/\s+/g,' '); }
-function updateLinks(){
-  const q = encodeURIComponent(query());
-  $('lEbay').href = `https://www.ebay.it/sch/i.html?_nkw=${q}&LH_Sold=1&LH_Complete=1&_sop=13`;
-  $('lVinted').href = `https://www.vinted.it/catalog?search_text=${q}&order=newest_first`;
-}
-['brand','model'].forEach(i => $(i).addEventListener('input', updateLinks)); updateLinks();
-
-// --- AI ---
-$('go').onclick = async () => {
-  const key = $('key').value.trim();
-  if(!key) return $('status').textContent = 'Inserisci la chiave API.';
-  if(!images.length && !$('brand').value && !$('model').value) return $('status').textContent = 'Carica almeno una foto o scrivi marca/modello.';
-  $('go').disabled = true; $('status').textContent = 'Analizzo le foto e cerco i prezzi di vendita recenti...';
-  const specs = `Marca: ${$('brand').value}\nModello: ${$('model').value}\nTipo: ${$('cat').value}\nSocietà di grading: ${$('grader').value}\nVoto: ${$('grade').value}\nLingua: ${$('lang').value || 'DA RILEVARE dalla carta (testo della carta e etichetta: giapponese, inglese, coreano, cinese, italiano, ecc.)'}\nIl supporto/stand bianco nelle foto NON è in vendita (non nominarlo come incluso; nella descrizione scrivi che lo stand è solo per la foto e non è incluso)\nTaglia: ${$('size').value}\nColore: ${$('color').value}\nCondizione: ${$('cond').value}\nNote: ${$('notes').value}`;
-  const prompt = `Sei un esperto di rivendita su Vinted Italia. Identifica l'articolo dalle foto e dalle specifiche, poi cerca sul web le vendite recenti (carte gradate: eBay venduti, Cardmarket, PriceCharting, 130point) (eBay.it "venduti", Vinted, altri marketplace) di articoli identici o molto simili, nella stessa condizione.
-Specifiche dell'utente:\n${specs}
-
-Rispondi SOLO con JSON valido, senza testo extra:
-{"articolo":"cosa è","titolo":"titolo Vinted max 60 caratteri con marca, modello, taglia, colore","prezzo":numero in euro,"min":numero,"max":numero,"descrizione":"descrizione in italiano, 4-8 righe: cos'è, marca, taglia/misure, colore, materiale, condizioni, eventuali difetti. NON parlare di spedizione.","comparabili":[{"fonte":"...","prezzo":numero,"nota":"...","url":"..."}],"affidabilita":"alta/media/bassa e perché"}
-Se è una carta gradata: leggi dall'etichetta del slab società di grading, voto, anno, set, numero carta, rarità e numero di certificato. Il prezzo va cercato per la STESSA società e lo STESSO voto (es. PSA 10 vale molto più di altre società o di un 9). Se non trovi venduti della stessa società, usa PSA come riferimento e applica uno sconto, spiegandolo in "affidabilita". Nel titolo metti: nome carta, numero, set, società+voto, lingua della carta (es. JPN, ENG, KOR, ITA). Nella descrizione riporta numero di certificato e verifica che coincida con la foto.
-Il prezzo deve essere competitivo per vendere in fretta su Vinted (tipicamente leggermente sotto la mediana dei venduti). Non inventare comparabili: se non trovi dati, dillo in "affidabilita" e stima con prudenza.`;
-  const parts = images.map(d => ({inline_data:{mime_type:'image/jpeg', data:d.split(',')[1]}}));
-  parts.push({text:prompt});
+$('ocr').onclick = async () => {
+  if (typeof Tesseract === 'undefined') return $('ocrStatus').textContent = 'OCR non disponibile (serve internet). Compila a mano.';
+  $('ocr').disabled = true; $('ocrStatus').textContent = 'Leggo l\'etichetta...';
   try{
-    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent', {
-      method:'POST',
-      headers:{'content-type':'application/json','x-goog-api-key':key},
-      body: JSON.stringify({contents:[{role:'user', parts}], tools:[{google_search:{}}]})
-    });
-    const j = await r.json();
-    if(!r.ok) throw new Error(j.error?.message || r.status);
-    const text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
-    const data = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
-    show(data);
-    $('status').textContent = 'Fatto. ' + (data.affidabilita || '');
-  }catch(e){
-    $('status').textContent = 'Errore: ' + e.message;
-  }
-  $('go').disabled = false;
+    const src = images[sel], h = Math.round(src.height * .5), c = document.createElement('canvas');
+    c.width = src.width * 1.5; c.height = h * 1.5;               // metà alta (etichetta), ingrandita
+    c.getContext('2d').drawImage(src, 0, 0, src.width, h, 0, 0, c.width, c.height);
+    const { data } = await Tesseract.recognize(c, 'eng');
+    fillFrom(data.text);
+    $('ocrStatus').textContent = 'Fatto: controlla e correggi i campi.';
+  }catch(e){ $('ocrStatus').textContent = 'Errore OCR: ' + e.message; }
+  $('ocr').disabled = false;
 };
-
-function show(d){
-  $('out').classList.remove('hidden');
-  $('rTitle').value = d.titolo || '';
-  $('rPrice').textContent = d.prezzo != null ? Math.round(d.prezzo) + ' €' : '?';
-  $('rRange').textContent = d.min != null ? `Forbice venduti: ${d.min} – ${d.max} €` : '';
-  $('rDesc').value = (d.descrizione || '').trim() + '\n\n' + SHIPPING;
-  const c = d.comparabili || [];
-  $('comps').innerHTML = c.length ? '<label>Comparabili trovati</label><table>' +
-    c.map(x => `<tr><td>${esc(x.fonte)}</td><td>${esc(x.prezzo)} €</td><td>${esc(x.nota||'')}</td><td>${/^https?:\/\//.test(x.url||'') ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">link</a>` : ''}</td></tr>`).join('') + '</table>' : '';
-  $('lEbay').href = `https://www.ebay.it/sch/i.html?_nkw=${encodeURIComponent(d.articolo || query())}&LH_Sold=1&LH_Complete=1&_sop=13`;
-  $('lVinted').href = `https://www.vinted.it/catalog?search_text=${encodeURIComponent(d.articolo || query())}&order=newest_first`;
-  $('out').scrollIntoView({behavior:'smooth'});
+function fillFrom(t){
+  const set = (id, val) => { if (val && !$(id).value) $(id).value = val; };
+  const up = t.toUpperCase();
+  const g = [['PSA','PSA'],['GRAAD','Graad'],['AKATSU','Akatsu'],['TRICK OR TRADE','TOT'],['CGC','CGC'],['BECKETT','BGS'],['BGS','BGS']].find(([k]) => up.includes(k));
+  if (g) $('grader').value = g[1];
+  const num = t.match(/\b(\d{1,3}\s?\/\s?\d{2,3})\b/); set('num', num && num[1].replace(/\s/g, ''));
+  const yr = t.match(/\b(20[12]\d)\b/); set('anno', yr && yr[1]);
+  const gr = t.match(/(?:GEM\s*M(?:INT|T)|MINT|NM[-\s]?MT)\D{0,6}(10|9\.5|9|8\.5|8)\b/i) || t.match(/\b(10|9\.5)\b/);
+  set('grade', gr && gr[1]);
+  const cert = t.match(/\b(\d{8,12})\b/); set('cert', cert && cert[1]);
+  if (/\bJPN?\b|JAPAN/i.test(t)) $('lang').value = 'JPN'; else if (/\bENG|ENGLISH\b/i.test(t)) $('lang').value = 'ENG';
+  refresh();
 }
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-// --- copia ---
+// ---------- varie ----------
 document.addEventListener('click', e => {
-  const id = e.target.dataset?.copy; if(!id) return;
+  const id = e.target.dataset?.copy; if (!id) return;
   navigator.clipboard.writeText($(id).value).then(() => { const o = e.target.textContent; e.target.textContent = 'Copiato!'; setTimeout(() => e.target.textContent = o, 1200); });
 });
-
-// --- calcolo manuale ---
-$('calc').onclick = () => {
-  const n = $('prices').value.replace(/€/g,'').split(/[\s;]+/).map(s => parseFloat(s.replace(',','.'))).filter(x => x > 0).sort((a,b)=>a-b);
-  if(!n.length) return $('calcOut').textContent = 'Inserisci almeno un prezzo.';
-  const m = n.length % 2 ? n[(n.length-1)/2] : (n[n.length/2-1] + n[n.length/2]) / 2;
-  $('calcOut').innerHTML = `Mediana: <b>${m.toFixed(2)} €</b> · min ${n[0]} · max ${n[n.length-1]} (${n.length} prezzi)<br>Prezzo consigliato (−10%): <b>${Math.round(m*0.9)} €</b>`;
+$('reset').onclick = () => {
+  ['nome','num','set','anno','rar','grade','cert','notes','paste'].forEach(i => $(i).value = '');
+  images = []; sel = -1; $('thumbs').innerHTML = ''; $('ocr').disabled = true; $('ocrStatus').textContent = '';
+  $('calcOut').textContent = ''; $('rPrice').textContent = '–'; refresh(); scrollTo({top: 0, behavior: 'smooth'});
 };
 </script>
 </body>
