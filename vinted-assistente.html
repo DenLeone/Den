@@ -50,7 +50,11 @@
   <div class="row">
     <div><label>Marca</label><input id="brand"></div>
     <div><label>Modello / nome</label><input id="model"></div>
-    <div><label>Categoria</label><input id="cat" placeholder="es. scarpe, giacca, gioco..."></div>
+    <div><label>Tipo articolo</label>
+      <select id="cat"><option value="carta Pokémon gradata (slab)" selected>Carta Pokémon gradata</option><option value="">Altro (abbigliamento, ecc.)</option></select></div>
+    <div><label>Società di grading</label><input id="grader" placeholder="PSA, Graad, Akatsu, TOT..."></div>
+    <div><label>Voto</label><input id="grade" placeholder="10, 9.5..."></div>
+    <div><label>Lingua</label><input id="lang" value="Giapponese"></div>
     <div><label>Taglia / misure</label><input id="size"></div>
     <div><label>Colore</label><input id="color"></div>
     <div><label>Condizione</label>
@@ -58,6 +62,7 @@
   </div>
   <label>Note (difetti, materiale, anno, ecc.)</label>
   <textarea id="notes"></textarea>
+  <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="stand" style="width:auto"> Include il supporto/stand in foto</label>
   <button id="go">Analizza e suggerisci</button>
   <div id="status" class="mut"></div>
 </div>
@@ -135,12 +140,13 @@ $('go').onclick = async () => {
   if(!key) return $('status').textContent = 'Inserisci la chiave API.';
   if(!images.length && !$('brand').value && !$('model').value) return $('status').textContent = 'Carica almeno una foto o scrivi marca/modello.';
   $('go').disabled = true; $('status').textContent = 'Analizzo le foto e cerco i prezzi di vendita recenti...';
-  const specs = `Marca: ${$('brand').value}\nModello: ${$('model').value}\nCategoria: ${$('cat').value}\nTaglia: ${$('size').value}\nColore: ${$('color').value}\nCondizione: ${$('cond').value}\nNote: ${$('notes').value}`;
-  const prompt = `Sei un esperto di rivendita su Vinted Italia. Identifica l'articolo dalle foto e dalle specifiche, poi cerca sul web le vendite recenti (eBay.it "venduti", Vinted, altri marketplace) di articoli identici o molto simili, nella stessa condizione.
+  const specs = `Marca: ${$('brand').value}\nModello: ${$('model').value}\nTipo: ${$('cat').value}\nSocietà di grading: ${$('grader').value}\nVoto: ${$('grade').value}\nLingua: ${$('lang').value}\nSupporto incluso: ${$('stand').checked ? 'sì' : 'no'}\nTaglia: ${$('size').value}\nColore: ${$('color').value}\nCondizione: ${$('cond').value}\nNote: ${$('notes').value}`;
+  const prompt = `Sei un esperto di rivendita su Vinted Italia. Identifica l'articolo dalle foto e dalle specifiche, poi cerca sul web le vendite recenti (carte gradate: eBay venduti, Cardmarket, PriceCharting, 130point) (eBay.it "venduti", Vinted, altri marketplace) di articoli identici o molto simili, nella stessa condizione.
 Specifiche dell'utente:\n${specs}
 
 Rispondi SOLO con JSON valido, senza testo extra:
 {"articolo":"cosa è","titolo":"titolo Vinted max 60 caratteri con marca, modello, taglia, colore","prezzo":numero in euro,"min":numero,"max":numero,"descrizione":"descrizione in italiano, 4-8 righe: cos'è, marca, taglia/misure, colore, materiale, condizioni, eventuali difetti. NON parlare di spedizione.","comparabili":[{"fonte":"...","prezzo":numero,"nota":"...","url":"..."}],"affidabilita":"alta/media/bassa e perché"}
+Se è una carta gradata: leggi dall'etichetta del slab società di grading, voto, anno, set, numero carta, rarità e numero di certificato. Il prezzo va cercato per la STESSA società e lo STESSO voto (es. PSA 10 vale molto più di altre società o di un 9). Se non trovi venduti della stessa società, usa PSA come riferimento e applica uno sconto, spiegandolo in "affidabilita". Nel titolo metti: nome carta, numero, set, società+voto, lingua (JPN). Nella descrizione riporta numero di certificato e verifica che coincida con la foto.
 Il prezzo deve essere competitivo per vendere in fretta su Vinted (tipicamente leggermente sotto la mediana dei venduti). Non inventare comparabili: se non trovi dati, dillo in "affidabilita" e stima con prudenza.`;
   const content = images.map(d => ({type:'image', source:{type:'base64', media_type:'image/jpeg', data:d.split(',')[1]}}));
   content.push({type:'text', text:prompt});
