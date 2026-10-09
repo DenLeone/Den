@@ -54,7 +54,7 @@
       <select id="cat"><option value="carta Pokémon gradata (slab)" selected>Carta Pokémon gradata</option><option value="">Altro (abbigliamento, ecc.)</option></select></div>
     <div><label>Società di grading</label><input id="grader" placeholder="PSA, Graad, Akatsu, TOT..."></div>
     <div><label>Voto</label><input id="grade" placeholder="10, 9.5..."></div>
-    <div><label>Lingua</label><input id="lang" value="Giapponese"></div>
+    <div><label>Lingua</label><input id="lang" placeholder="vuoto = automatica dalla carta"></div>
     <div><label>Taglia / misure</label><input id="size"></div>
     <div><label>Colore</label><input id="color"></div>
     <div><label>Condizione</label>
@@ -139,18 +139,18 @@ $('go').onclick = async () => {
   if(!key) return $('status').textContent = 'Inserisci la chiave API.';
   if(!images.length && !$('brand').value && !$('model').value) return $('status').textContent = 'Carica almeno una foto o scrivi marca/modello.';
   $('go').disabled = true; $('status').textContent = 'Analizzo le foto e cerco i prezzi di vendita recenti...';
-  const specs = `Marca: ${$('brand').value}\nModello: ${$('model').value}\nTipo: ${$('cat').value}\nSocietà di grading: ${$('grader').value}\nVoto: ${$('grade').value}\nLingua: ${$('lang').value}\nIl supporto/stand bianco nelle foto NON è in vendita (non nominarlo come incluso; nella descrizione scrivi che lo stand è solo per la foto e non è incluso)\nTaglia: ${$('size').value}\nColore: ${$('color').value}\nCondizione: ${$('cond').value}\nNote: ${$('notes').value}`;
+  const specs = `Marca: ${$('brand').value}\nModello: ${$('model').value}\nTipo: ${$('cat').value}\nSocietà di grading: ${$('grader').value}\nVoto: ${$('grade').value}\nLingua: ${$('lang').value || 'DA RILEVARE dalla carta (testo della carta e etichetta: giapponese, inglese, coreano, cinese, italiano, ecc.)'}\nIl supporto/stand bianco nelle foto NON è in vendita (non nominarlo come incluso; nella descrizione scrivi che lo stand è solo per la foto e non è incluso)\nTaglia: ${$('size').value}\nColore: ${$('color').value}\nCondizione: ${$('cond').value}\nNote: ${$('notes').value}`;
   const prompt = `Sei un esperto di rivendita su Vinted Italia. Identifica l'articolo dalle foto e dalle specifiche, poi cerca sul web le vendite recenti (carte gradate: eBay venduti, Cardmarket, PriceCharting, 130point) (eBay.it "venduti", Vinted, altri marketplace) di articoli identici o molto simili, nella stessa condizione.
 Specifiche dell'utente:\n${specs}
 
 Rispondi SOLO con JSON valido, senza testo extra:
 {"articolo":"cosa è","titolo":"titolo Vinted max 60 caratteri con marca, modello, taglia, colore","prezzo":numero in euro,"min":numero,"max":numero,"descrizione":"descrizione in italiano, 4-8 righe: cos'è, marca, taglia/misure, colore, materiale, condizioni, eventuali difetti. NON parlare di spedizione.","comparabili":[{"fonte":"...","prezzo":numero,"nota":"...","url":"..."}],"affidabilita":"alta/media/bassa e perché"}
-Se è una carta gradata: leggi dall'etichetta del slab società di grading, voto, anno, set, numero carta, rarità e numero di certificato. Il prezzo va cercato per la STESSA società e lo STESSO voto (es. PSA 10 vale molto più di altre società o di un 9). Se non trovi venduti della stessa società, usa PSA come riferimento e applica uno sconto, spiegandolo in "affidabilita". Nel titolo metti: nome carta, numero, set, società+voto, lingua (JPN). Nella descrizione riporta numero di certificato e verifica che coincida con la foto.
+Se è una carta gradata: leggi dall'etichetta del slab società di grading, voto, anno, set, numero carta, rarità e numero di certificato. Il prezzo va cercato per la STESSA società e lo STESSO voto (es. PSA 10 vale molto più di altre società o di un 9). Se non trovi venduti della stessa società, usa PSA come riferimento e applica uno sconto, spiegandolo in "affidabilita". Nel titolo metti: nome carta, numero, set, società+voto, lingua della carta (es. JPN, ENG, KOR, ITA). Nella descrizione riporta numero di certificato e verifica che coincida con la foto.
 Il prezzo deve essere competitivo per vendere in fretta su Vinted (tipicamente leggermente sotto la mediana dei venduti). Non inventare comparabili: se non trovi dati, dillo in "affidabilita" e stima con prudenza.`;
   const parts = images.map(d => ({inline_data:{mime_type:'image/jpeg', data:d.split(',')[1]}}));
   parts.push({text:prompt});
   try{
-    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent', {
       method:'POST',
       headers:{'content-type':'application/json','x-goog-api-key':key},
       body: JSON.stringify({contents:[{role:'user', parts}], tools:[{google_search:{}}]})
