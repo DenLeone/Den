@@ -62,7 +62,6 @@
   </div>
   <label>Note (difetti, materiale, anno, ecc.)</label>
   <textarea id="notes"></textarea>
-  <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="stand" style="width:auto"> Include il supporto/stand in foto</label>
   <button id="go">Analizza e suggerisci</button>
   <div id="status" class="mut"></div>
 </div>
@@ -140,7 +139,7 @@ $('go').onclick = async () => {
   if(!key) return $('status').textContent = 'Inserisci la chiave API.';
   if(!images.length && !$('brand').value && !$('model').value) return $('status').textContent = 'Carica almeno una foto o scrivi marca/modello.';
   $('go').disabled = true; $('status').textContent = 'Analizzo le foto e cerco i prezzi di vendita recenti...';
-  const specs = `Marca: ${$('brand').value}\nModello: ${$('model').value}\nTipo: ${$('cat').value}\nSocietà di grading: ${$('grader').value}\nVoto: ${$('grade').value}\nLingua: ${$('lang').value}\nSupporto incluso: ${$('stand').checked ? 'sì' : 'no'}\nTaglia: ${$('size').value}\nColore: ${$('color').value}\nCondizione: ${$('cond').value}\nNote: ${$('notes').value}`;
+  const specs = `Marca: ${$('brand').value}\nModello: ${$('model').value}\nTipo: ${$('cat').value}\nSocietà di grading: ${$('grader').value}\nVoto: ${$('grade').value}\nLingua: ${$('lang').value}\nIl supporto/stand bianco nelle foto NON è in vendita (non nominarlo come incluso; nella descrizione scrivi che lo stand è solo per la foto e non è incluso)\nTaglia: ${$('size').value}\nColore: ${$('color').value}\nCondizione: ${$('cond').value}\nNote: ${$('notes').value}`;
   const prompt = `Sei un esperto di rivendita su Vinted Italia. Identifica l'articolo dalle foto e dalle specifiche, poi cerca sul web le vendite recenti (carte gradate: eBay venduti, Cardmarket, PriceCharting, 130point) (eBay.it "venduti", Vinted, altri marketplace) di articoli identici o molto simili, nella stessa condizione.
 Specifiche dell'utente:\n${specs}
 
