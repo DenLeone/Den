@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assistente Vinted</title>
+<style>
+  :root{--bg:#f5f6f8;--card:#fff;--tx:#1d2330;--mut:#6b7385;--ac:#09b1ba;--bd:#dfe3ea}
+  @media(prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--tx:#e8ebf1;--mut:#9aa3b5;--bd:#2f3644}}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+  main{max-width:900px;margin:0 auto;padding:16px}
+  h1{font-size:22px;margin:8px 0 16px}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:16px}
+  h2{font-size:16px;margin:0 0 10px}
+  label{display:block;font-size:13px;color:var(--mut);margin:8px 0 3px}
+  input,select,textarea{width:100%;padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+  textarea{min-height:90px;resize:vertical}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  button,a.btn{display:inline-block;padding:9px 14px;border:0;border-radius:8px;background:var(--ac);color:#fff;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;margin:6px 6px 0 0}
+  button.sec,a.btn.sec{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+  button:disabled{opacity:.5;cursor:wait}
+  #drop{border:2px dashed var(--bd);border-radius:12px;padding:24px;text-align:center;color:var(--mut);cursor:pointer}
+  #drop.over{border-color:var(--ac)}
+  #thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  #thumbs img{width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)}
+  .big{font-size:28px;font-weight:700;color:var(--ac)}
+  .mut{color:var(--mut);font-size:13px}
+  #status{white-space:pre-wrap}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>Assistente Vinted: titolo, prezzo e descrizione</h1>
+
+<div class="card">
+  <h2>1. Chiave API Anthropic</h2>
+  <input id="key" type="password" placeholder="sk-ant-..." autocomplete="off">
+  <p class="mut">Resta solo nel tuo browser (localStorage). Serve per riconoscere l'articolo dalle foto e cercare i prezzi sul web.</p>
+</div>
+
+<div class="card">
+  <h2>2. Foto e specifiche</h2>
+  <div id="drop">Trascina qui le foto (o clicca) &ndash; max 6</div>
+  <input id="files" type="file" accept="image/*" multiple class="hidden">
+  <div id="thumbs"></div>
+  <div class="row">
+    <div><label>Marca</label><input id="brand"></div>
+    <div><label>Modello / nome</label><input id="model"></div>
+    <div><label>Categoria</label><input id="cat" placeholder="es. scarpe, giacca, gioco..."></div>
+    <div><label>Taglia / misure</label><input id="size"></div>
+    <div><label>Colore</label><input id="color"></div>
+    <div><label>Condizione</label>
+      <select id="cond"><option>Nuovo con cartellino</option><option>Nuovo senza cartellino</option><option selected>Ottime condizioni</option><option>Buone condizioni</option><option>Condizioni accettabili</option></select></div>
+  </div>
+  <label>Note (difetti, materiale, anno, ecc.)</label>
+  <textarea id="notes"></textarea>
+  <button id="go">Analizza e suggerisci</button>
+  <div id="status" class="mut"></div>
+</div>
+
+<div id="out" class="card hidden">
+  <h2>3. Risultato</h2>
+  <label>Titolo</label>
+  <input id="rTitle">
+  <button class="sec" data-copy="rTitle">Copia titolo</button>
+  <label>Prezzo consigliato</label>
+  <div class="big"><span id="rPrice"></span></div>
+  <div class="mut" id="rRange"></div>
+  <label>Descrizione</label>
+  <textarea id="rDesc" style="min-height:220px"></textarea>
+  <button class="sec" data-copy="rDesc">Copia descrizione</button>
+  <div id="comps"></div>
+</div>
+
+<div class="card">
+  <h2>Controlla i venduti a mano</h2>
+  <p class="mut">eBay e Vinted non permettono di leggere i risultati da una pagina HTML locale: questi link aprono la ricerca già pronta. Incolla poi i prezzi per calcolare la mediana.</p>
+  <a class="btn sec" id="lEbay" target="_blank" rel="noopener">eBay venduti</a>
+  <a class="btn sec" id="lVinted" target="_blank" rel="noopener">Vinted (più recenti)</a>
+  <label>Prezzi trovati (separati da spazio, virgola o a capo)</label>
+  <textarea id="prices" placeholder="12 15 14,50 18"></textarea>
+  <button id="calc">Calcola prezzo</button>
+  <div id="calcOut" class="mut"></div>
+</div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const SHIPPING = "📦 Spedizione con InPost il giorno successivo all'acquisto.\nL'articolo sarà accuratamente imballato per arrivare in perfette condizioni.\n\nPer qualsiasi domanda o per altre foto scrivimi pure! Controlla anche gli altri miei articoli: sconto sui pacchetti.";
+let images = []; // {dataUrl}
+
+try { $('key').value = localStorage.getItem('ak') || ''; } catch(e){}
+$('key').addEventListener('change', () => { try { localStorage.setItem('ak', $('key').value.trim()); } catch(e){} });
+
+// --- foto ---
+$('drop').onclick = () => $('files').click();
+$('drop').ondragover = e => { e.preventDefault(); $('drop').classList.add('over'); };
+$('drop').ondragleave = () => $('drop').classList.remove('over');
+$('drop').ondrop = e => { e.preventDefault(); $('drop').classList.remove('over'); addFiles(e.dataTransfer.files); };
+$('files').onchange = e => addFiles(e.target.files);
+
+function addFiles(list){
+  [...list].filter(f => f.type.startsWith('image/')).slice(0, 6 - images.length).forEach(f => {
+    const img = new Image(), url = URL.createObjectURL(f);
+    img.onload = () => {
+      const s = Math.min(1, 1024 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = img.width * s; c.height = img.height * s;
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      const dataUrl = c.toDataURL('image/jpeg', .8);
+      images.push(dataUrl);
+      const t = document.createElement('img'); t.src = dataUrl; $('thumbs').appendChild(t);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+}
+
+// --- link ricerca ---
+function query(extra){ return [$('brand').value, $('model').value, extra||''].join(' ').trim().replace(/\s+/g,' '); }
+function updateLinks(){
+  const q = encodeURIComponent(query());
+  $('lEbay').href = `https://www.ebay.it/sch/i.html?_nkw=${q}&LH_Sold=1&LH_Complete=1&_sop=13`;
+  $('lVinted').href = `https://www.vinted.it/catalog?search_text=${q}&order=newest_first`;
+}
+['brand','model'].forEach(i => $(i).addEventListener('input', updateLinks)); updateLinks();
+
+// --- AI ---
+$('go').onclick = async () => {
+  const key = $('key').value.trim();
+  if(!key) return $('status').textContent = 'Inserisci la chiave API.';
+  if(!images.length && !$('brand').value && !$('model').value) return $('status').textContent = 'Carica almeno una foto o scrivi marca/modello.';
+  $('go').disabled = true; $('status').textContent = 'Analizzo le foto e cerco i prezzi di vendita recenti...';
+  const specs = `Marca: ${$('brand').value}\nModello: ${$('model').value}\nCategoria: ${$('cat').value}\nTaglia: ${$('size').value}\nColore: ${$('color').value}\nCondizione: ${$('cond').value}\nNote: ${$('notes').value}`;
+  const prompt = `Sei un esperto di rivendita su Vinted Italia. Identifica l'articolo dalle foto e dalle specifiche, poi cerca sul web le vendite recenti (eBay.it "venduti", Vinted, altri marketplace) di articoli identici o molto simili, nella stessa condizione.
+Specifiche dell'utente:\n${specs}
+
+Rispondi SOLO con JSON valido, senza testo extra:
+{"articolo":"cosa è","titolo":"titolo Vinted max 60 caratteri con marca, modello, taglia, colore","prezzo":numero in euro,"min":numero,"max":numero,"descrizione":"descrizione in italiano, 4-8 righe: cos'è, marca, taglia/misure, colore, materiale, condizioni, eventuali difetti. NON parlare di spedizione.","comparabili":[{"fonte":"...","prezzo":numero,"nota":"...","url":"..."}],"affidabilita":"alta/media/bassa e perché"}
+Il prezzo deve essere competitivo per vendere in fretta su Vinted (tipicamente leggermente sotto la mediana dei venduti). Non inventare comparabili: se non trovi dati, dillo in "affidabilita" e stima con prudenza.`;
+  const content = images.map(d => ({type:'image', source:{type:'base64', media_type:'image/jpeg', data:d.split(',')[1]}}));
+  content.push({type:'text', text:prompt});
+  try{
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:'claude-sonnet-5-5', max_tokens:3000,
+        tools:[{type:'web_search_20250305', name:'web_search', max_uses:5}],
+        messages:[{role:'user', content}]})
+    });
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.error?.message || r.status);
+    const text = j.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const data = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+    show(data);
+    $('status').textContent = 'Fatto. ' + (data.affidabilita || '');
+  }catch(e){
+    $('status').textContent = 'Errore: ' + e.message;
+  }
+  $('go').disabled = false;
+};
+
+function show(d){
+  $('out').classList.remove('hidden');
+  $('rTitle').value = d.titolo || '';
+  $('rPrice').textContent = d.prezzo != null ? Math.round(d.prezzo) + ' €' : '?';
+  $('rRange').textContent = d.min != null ? `Forbice venduti: ${d.min} – ${d.max} €` : '';
+  $('rDesc').value = (d.descrizione || '').trim() + '\n\n' + SHIPPING;
+  const c = d.comparabili || [];
+  $('comps').innerHTML = c.length ? '<label>Comparabili trovati</label><table>' +
+    c.map(x => `<tr><td>${esc(x.fonte)}</td><td>${esc(x.prezzo)} €</td><td>${esc(x.nota||'')}</td><td>${/^https?:\/\//.test(x.url||'') ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">link</a>` : ''}</td></tr>`).join('') + '</table>' : '';
+  $('lEbay').href = `https://www.ebay.it/sch/i.html?_nkw=${encodeURIComponent(d.articolo || query())}&LH_Sold=1&LH_Complete=1&_sop=13`;
+  $('lVinted').href = `https://www.vinted.it/catalog?search_text=${encodeURIComponent(d.articolo || query())}&order=newest_first`;
+  $('out').scrollIntoView({behavior:'smooth'});
+}
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// --- copia ---
+document.addEventListener('click', e => {
+  const id = e.target.dataset?.copy; if(!id) return;
+  navigator.clipboard.writeText($(id).value).then(() => { const o = e.target.textContent; e.target.textContent = 'Copiato!'; setTimeout(() => e.target.textContent = o, 1200); });
+});
+
+// --- calcolo manuale ---
+$('calc').onclick = () => {
+  const n = $('prices').value.replace(/€/g,'').split(/[\s;]+/).map(s => parseFloat(s.replace(',','.'))).filter(x => x > 0).sort((a,b)=>a-b);
+  if(!n.length) return $('calcOut').textContent = 'Inserisci almeno un prezzo.';
+  const m = n.length % 2 ? n[(n.length-1)/2] : (n[n.length/2-1] + n[n.length/2]) / 2;
+  $('calcOut').innerHTML = `Mediana: <b>${m.toFixed(2)} €</b> · min ${n[0]} · max ${n[n.length-1]} (${n.length} prezzi)<br>Prezzo consigliato (−10%): <b>${Math.round(m*0.9)} €</b>`;
+};
+</script>
+</body>
+</html>
